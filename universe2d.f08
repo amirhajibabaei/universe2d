@@ -267,11 +267,13 @@
 
       subroutine add_pp2d(pos,idx,p) 
       implicit none
-      class(pp2d), intent(inout)   :: pos
-      integer,       intent(in)    :: idx
-      type(particle), intent(in)   :: p
-      integer                      :: cc(2), cl
-      type(particle)               :: rp
+      class(pp2d), intent(inout)    :: pos
+      integer,       intent(in)     :: idx
+      type(particle), intent(inout) :: p
+      integer                       :: cc(2), cl
+      type(particle)                :: rp
+      p%pos = mod(p%pos,pos%ll)
+      where( p%pos<0.0_pr ) p%pos = p%pos+pos%ll
       cc = floor(p%pos/pos%ww)
       cl = cc(2)*pos%nx + cc(1)
       if( pos%stat==0 ) then
