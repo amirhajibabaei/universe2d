@@ -9,7 +9,7 @@
    use iso_fortran_env, only: real32, output_unit
    implicit none
    private
-   public      pr,  pp2d, stack, cube
+   public      pr,  pp2d, stack, cube, particle
   
       integer, parameter      :: pr = real32 
 
@@ -529,7 +529,7 @@
              end do
       ccub => ccub%sur3 
              do i = 1, ccub%occ
-                if( ccub%hld(i)%pos(1)>=r(1) .and. &
+                if( ccub%hld(i)%pos(1)>r(1) .and. &
                      ccub%hld(i)%pos(2)<r(2) ) then
                    env%n = env%n + 1
                    env%id(env%n) = ccub%idx(i) 
@@ -539,7 +539,7 @@
              end do
       ccub => ccub%sur4 
              do i = 1, ccub%occ
-                if( ccub%hld(i)%pos(1)>=r(1) ) then 
+                if( ccub%hld(i)%pos(1)>r(1) ) then 
                    env%n = env%n + 1
                    env%id(env%n) = ccub%idx(i) 
                    env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,3)
@@ -547,8 +547,8 @@
              end do
       ccub => ccub%sur4 
              do i = 1, ccub%occ
-                if( ccub%hld(i)%pos(1)>=r(1) .and. &
-                     ccub%hld(i)%pos(2)>=r(2) ) then
+                if( ccub%hld(i)%pos(1)>r(1) .and. &
+                     ccub%hld(i)%pos(2)>r(2) ) then
                    env%n = env%n + 1
                    env%id(env%n) = ccub%idx(i) 
                    env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,8)
@@ -557,7 +557,7 @@
              end do
       ccub => ccub%sur1 
              do i = 1, ccub%occ
-                if( ccub%hld(i)%pos(2)>=r(2) ) then 
+                if( ccub%hld(i)%pos(2)>r(2) ) then 
                    env%n = env%n + 1
                    env%id(env%n) = ccub%idx(i) 
                    env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,4)
@@ -566,7 +566,7 @@
       ccub => ccub%sur1 
              do i = 1, ccub%occ
                 if( ccub%hld(i)%pos(1)<r(1) .and. &
-                     ccub%hld(i)%pos(2)>=r(2) ) then
+                     ccub%hld(i)%pos(2)>r(2) ) then
                    env%n = env%n + 1
                    env%id(env%n) = ccub%idx(i) 
                    env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,5)
