@@ -3,7 +3,8 @@
 !                     1  (from mover6.2.f08)
 !  created:
 !                     2018/03/09 18:30
-! 
+!
+!  2018/03/12         bugs fixed (scube inequalities and x,y typo's)
 
    module universe
    use iso_fortran_env, only: real32, output_unit
@@ -507,6 +508,7 @@
                    env%n = env%n + 1
                    env%id(env%n) = ccub%idx(i) 
                    env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,1)
+                   env%y(env%n) = ccub%hld(i)%pos(2) !+ su_ww(2,1)
                 end if
              end do
       ccub => ccub%sur2 
@@ -524,6 +526,7 @@
                 if( ccub%hld(i)%pos(2)<r(2) ) then 
                    env%n = env%n + 1
                    env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) !+ su_ww(1,2)
                    env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,2)
                 end if
              end do
@@ -543,6 +546,7 @@
                    env%n = env%n + 1
                    env%id(env%n) = ccub%idx(i) 
                    env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,3)
+                   env%y(env%n) = ccub%hld(i)%pos(2) !+ su_ww(2,3)
                 end if
              end do
       ccub => ccub%sur4 
@@ -560,6 +564,7 @@
                 if( ccub%hld(i)%pos(2)>r(2) ) then 
                    env%n = env%n + 1
                    env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) !+ su_ww(1,4)
                    env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,4)
                 end if
              end do
