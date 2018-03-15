@@ -5,6 +5,8 @@
 !                     2018/03/09 18:30
 !
 !  2018/03/12         bugs fixed (scube inequalities and x,y typo's)
+!  2018/03/14         stack%g defined
+!
 
    module universe
    use iso_fortran_env, only: real32, output_unit
@@ -93,6 +95,7 @@
          real(pr)             :: y(nstk)
          real(pr)             :: r(nstk)
          real(pr)             :: f(nstk)
+         real(pr)             :: g(nstk)
       end type stack
 
    contains
