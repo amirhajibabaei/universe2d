@@ -6,7 +6,7 @@
 !
 !  2018/03/12         bugs fixed (scube inequalities and x,y typo's)
 !  2018/03/14         stack%g defined
-!
+!  2018/03/16         read_lammps_pp2d added
 
    module universe
    use iso_fortran_env, only: real32, output_unit
@@ -51,7 +51,7 @@
       end type cube
 
       interface pp2d
-         procedure               init_pp2d, load_pp2d
+         procedure               init_pp2d, load_pp2d, read_lammps_pp2d
       end interface
 
       type pp2d
@@ -339,7 +339,37 @@
          end do
       end if
       end subroutine write_pp2d
+      
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ read lammps
 
+      function read_lammps_pp2d(fname, wth,lammps) result(pos) 
+      implicit none
+      character(len=*), intent(in)    :: fname,lammps
+      real(pr),         intent(in)    :: wth
+      type(pp2d)                      :: pos
+      integer                         :: uin, i, num
+      real(pr)                        :: lx, ly, skip
+      type(particle)                  :: p
+      if(lammps /= "lammps") then
+         write(*,*)"not lammps";stop
+      end if
+      open( newunit=uin, file=fname )
+         read(uin,*)
+         read(uin,*)
+         read(uin,*)
+         read(uin,*) num
+         read(uin,*)
+         read(uin,*) skip, lx
+         read(uin,*) skip, ly
+         read(uin,*)
+         read(uin,*)
+         pos = pp2d([lx,ly],wth)
+         do i = 0, num-1
+             read(uin,*) p
+             call pos%add(i,p)
+         end do
+      close(uin)
+      end function read_lammps_pp2d
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
       
