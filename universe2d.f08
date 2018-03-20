@@ -7,6 +7,7 @@
 !  2018/03/12         bugs fixed (scube inequalities and x,y typo's)
 !  2018/03/14         stack%g defined
 !  2018/03/16         read_lammps_pp2d added
+!  2018/03/20         activate_pp2d altered
 
    module universe
    use iso_fortran_env, only: real32, output_unit
@@ -430,24 +431,28 @@
       end subroutine reserve_pp2d 
 
 
-      subroutine active_pp2d(pos,low,high)
+      subroutine active_pp2d(pos,c,cw)
       implicit none
       class(pp2d), intent(inout) :: pos
       integer,      intent(in),&
-                      optional   :: low(2), high(2)
+                      optional   :: c(2), cw(2)
       integer                    :: c1(2), c2(2)
       integer                    :: cx, cy, cl
-      integer                    :: k, idx
-      if(present(low) .and. present(high)) then
-         c1 = low; c2=high
+      integer                    :: k, idx, kx, ky
+      if(present(c) .and. present(cw)) then
+         c1 = c; c2 = c1+cw-1
       else
          c1 = [0,0]; c2 = pos%nxy-1
       end if
       pos%cup%tag = 1 
       idx = -1
       do cy = c1(2), c2(2)
+         ky = mod(cy,pos%ny)
+         if( ky<0 ) ky = ky + pos%ny
          do cx = c1(1), c2(1)
-            cl = cy*pos%nx + cx
+            kx = mod(cx,pos%nx)
+            if( kx<0 ) kx = kx + pos%nx
+            cl = ky*pos%nx + kx
             pos%cup(cl)%tag = 0 
             do k = 1, pos%cup(cl)%occ
                idx = idx + 1
