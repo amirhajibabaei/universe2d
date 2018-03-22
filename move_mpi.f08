@@ -8,7 +8,7 @@
    
       type gridmap
          integer              :: qx, qy, n
-         integer              :: q(2), nxy(2)
+         integer              :: q(2)
          integer, allocatable :: wx(:), wy(:)
          integer, allocatable :: c1(:,:), c2(:,:), cw(:,:)
       end type gridmap
@@ -17,19 +17,46 @@
          integer              :: size
          integer              :: rank
          integer, allocatable :: owner(:)
-         integer, allocatable :: old_owner(:)
-         integer              :: c_block(2), w_block(2) 
+         integer              :: c_mine(2), w_mine(2) 
       contains
+         procedure, private   :: mod2, cl_on
          procedure            :: start_parallel
          procedure            :: end_parallel
          procedure            :: suggest_mapping
          procedure            :: create_mapping
          procedure            :: do_mapping
-         procedure            :: update 
+         !procedure            :: update_north_east 
+         procedure            :: update_all 
       end type pp2d_mpi
    
    contains
    
+      function mod2(pos,c1,cw) result(c2)
+      implicit none
+      class(pp2d_mpi), intent(inout) :: pos 
+      integer,         intent(in)    :: c1(2)
+      integer, intent(in), optional  :: cw(2)
+      integer                        :: c2(2)
+      c2 = c1
+      if( present(cw) ) c2 = c2 + cw
+      c2 = mod(c2,pos%nxy) 
+      where(c2<0) c2 = c2+pos%nxy
+      end function mod2
+
+      function cl_on(pos,c1,cw) result(cl)
+      implicit none
+      class(pp2d_mpi), intent(inout) :: pos 
+      integer,         intent(in)    :: c1(2)
+      integer, intent(in), optional  :: cw(2)
+      integer                        :: cl, c2(2)
+      c2 = c1
+      if( present(cw) ) c2 = c2 + cw
+      c2 = pos%mod2(c2)
+      cl = c2(2)*pos%nx + c2(1)
+      end function cl_on
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
       subroutine start_parallel(pos)
       implicit none
       class(pp2d_mpi), intent(inout) :: pos
@@ -38,7 +65,6 @@
       call mpi_comm_rank(mpi_comm_world,pos%rank,ierr)
       call mpi_comm_size(mpi_comm_world,pos%size,ierr)
       allocate(pos%owner(0:pos%noc-1))
-      allocate(pos%old_owner(0:pos%noc-1))
       end subroutine start_parallel
       
       subroutine end_parallel(pos)
@@ -94,7 +120,6 @@
       integer                        :: i,j, n, cx1, cx2, cy1, cy2
       map%q = q; map%qx = q(1); map%qy = q(2)
       map%n = q(1)*q(2)
-      map%nxy = pos%nxy
       w = pos%nxy/q
       r = pos%nxy - q*w
       nx = w(1); nx(1:r(1)) = nx(1:r(1)) + 1
@@ -126,48 +151,61 @@
       class(pp2d_mpi), intent(inout) :: pos 
       type(gridmap),    intent(in)   :: map
       integer, intent(in), optional  :: shift(2)
-      integer                        :: cx0, cy0, cx, cy
-      integer                        :: i, k, l, cl
+      integer                        :: c0(2), cx, cy
+      integer                        :: i, cl
       if( present(shift) ) then
-         cx0 = shift(1); cy0 = shift(2)
+         c0 = shift
       else
-         cx0 = 0; cy0 = 0
+         c0 = 0
       end if
       do i = 0, map%n-1
-         do k = map%c1(2,i), map%c2(2,i)
-            cy = mod(k + cy0, pos%ny)
-            if( cy<0 ) cy = cy + pos%ny
-            do l = map%c1(1,i), map%c2(1,i)
-               cx = mod(l + cx0, pos%nx)
-               if( cx<0 ) cx = cx + pos%nx
-               cl = cy*pos%nx + cx 
+         do cy = map%c1(2,i), map%c2(2,i)
+            do cx = map%c1(1,i), map%c2(1,i)
+               cl = pos%cl_on(c0,[cx,cy])
                pos%owner(cl) = i
             end do
          end do
       end do
-      pos%c_block = mod( map%c1(:,pos%rank) + shift, pos%nxy )
-      where( pos%c_block<0 ) pos%c_block = pos%c_block + pos%nxy
-      pos%w_block = map%cw(:,pos%rank)
+      where(pos%owner>=pos%size) pos%owner=-1
+      pos%c_mine = pos%mod2( map%c1(:,pos%rank), c0 )
+      pos%w_mine = map%cw(:,pos%rank)
       end subroutine do_mapping
-   
-      subroutine update(pos)
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      subroutine update_all(pos)
       implicit none
       class(pp2d_mpi), intent(inout) :: pos 
-      integer                        :: i, ierr, occ
+      integer                        :: i, ierr, occ, owner
       do i = 0, pos%noc-1
+         owner = pos%owner(i)
+         if( owner==-1 ) cycle
          occ = pos%cup(i)%occ
-         call mpi_bcast(occ, 1, mpi_integer, pos%owner(i), mpi_comm_world, ierr)
+         call mpi_bcast(occ, 1, mpi_integer, owner, mpi_comm_world, ierr)
          do
             if( occ<=pos%cup(i)%cap ) exit
             call pos%cup(i)%ext()
          end do
-         call mpi_bcast(pos%cup(i)%hld(1:occ)%name, occ, mpi_integer, pos%owner(i), mpi_comm_world, ierr)
-         call mpi_bcast(pos%cup(i)%hld(1:occ)%pos(1), occ, mpi_real, pos%owner(i), mpi_comm_world, ierr)
-         call mpi_bcast(pos%cup(i)%hld(1:occ)%pos(2), occ, mpi_real, pos%owner(i), mpi_comm_world, ierr)
+         call mpi_bcast( pos%cup(i)%hld(1:occ)%name  , occ, mpi_integer, owner, mpi_comm_world, ierr)
+         call mpi_bcast( pos%cup(i)%hld(1:occ)%pos(1), occ, mpi_real,    owner, mpi_comm_world, ierr)
+         call mpi_bcast( pos%cup(i)%hld(1:occ)%pos(2), occ, mpi_real,    owner, mpi_comm_world, ierr)
          pos%cup(i)%occ = occ
       end do
-      end subroutine update 
-   
+      end subroutine update_all 
+
+      !subroutine update_north_east(pos,k)
+      !implicit none
+      !class(pp2d_mpi), intent(inout) :: pos 
+      !integer,         intent(in)    :: k
+      !integer                        :: cx, cy
+
+      !cx = pos%c_mine(1) + pos%w_mine(1) 
+      !if( cx>=pos%nx ) cx = cx - pos%nx
+      !cy = pos%c_mine(2) + pos%w_mine(2) 
+      !if( cy>=pos%ny ) cy = cy - pos%ny
+
+      !end subroutine update_north_east 
+
    end module parallel_universe
 
 
@@ -182,7 +220,7 @@
    integer             :: i, j, g(2), shift(2), idx, dir 
    real(pr)            :: delta, step_time
    real(pr), parameter :: dmax = 0.1
-   integer, parameter  :: steps = 10**6, cycles = 10
+   integer, parameter  :: steps = 10**6, cycles = 1
    integer(int64)      :: s_time, e_time, c_rate
    ! build system 
    pos%pp2d = pp2d([500.0_pr,500.0_pr],3.0_pr)
@@ -210,12 +248,12 @@
    do j = 1, cycles
       shift = shift+1
       call pos%do_mapping(map,shift)
-      call pos%activate(pos%c_block, pos%w_block-1)
+      call pos%activate(pos%c_mine, pos%w_mine-1)
       do i = 1, steps
          call pos%random(dmax,idx,dir,delta)
          call pos%move(idx,dir,delta)
       end do
-      call pos%update()
+      call pos%update_all()
    end do
    call system_clock(e_time)
    step_time = real(10**9*dble(e_time-s_time)/(c_rate*steps*cycles))
