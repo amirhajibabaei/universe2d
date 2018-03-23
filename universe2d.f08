@@ -69,7 +69,7 @@
          procedure            :: original => original_pp2d 
          procedure            :: random   => random_pp2d   
          procedure            :: move     => move_pp2d
-         procedure            :: scube    => scube_pp2d 
+         procedure            :: zoom_on  => scube_pp2d 
       end type pp2d
 
       integer, parameter      :: su_cubes(2,8) = &
@@ -659,7 +659,7 @@
             pos%cidx( idx ) = cub%su(dir)
             pos%kidx( idx ) = kk 
       else  if( cub%hld(k)%pos(dir)<0.0_pr ) then
-            call cub%hld(k)%move(dir,+pos%ww(dir))
+            call cub%hld(k)%move(dir,pos%ww(dir))
             if( dir==1 ) then
                call cub%sur3%add(idx,cub%hld(k))
                kk = cub%sur3%occ
