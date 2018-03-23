@@ -416,7 +416,7 @@
       if( .not.allocated(pos%cidx) ) then
           allocate(pos%cidx(0:ub))   
           allocate(pos%kidx(0:ub))  
-      else if( ubound(pos%cidx)<ub ) then
+      else if( size(pos%cidx)<ub+1 ) then
           deallocate(pos%cidx)   
           deallocate(pos%kidx)  
           allocate(pos%cidx(0:ub))   
@@ -438,6 +438,21 @@
       else
          c1 = [0,0]; c2 = pos%nxy-1
       end if
+      ! first count lnop and reserve
+      idx = 0
+      do cy = c1(2), c2(2)
+         ky = mod(cy,pos%ny)
+         if( ky<0 ) ky = ky + pos%ny
+         do cx = c1(1), c2(1)
+            kx = mod(cx,pos%nx)
+            if( kx<0 ) kx = kx + pos%nx
+            cl = ky*pos%nx + kx
+            idx = idx + pos%cup(cl)%occ
+         end do
+      end do
+      call pos%reserve(idx)
+      pos%lnop = idx
+      ! assign tags then
       pos%cup%tag = 1 
       idx = -1
       do cy = c1(2), c2(2)
@@ -456,7 +471,6 @@
             end do
          end do
       end do
-      pos%lnop = idx + 1
       end subroutine active_pp2d
 
 

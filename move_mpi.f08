@@ -9,7 +9,7 @@
    integer             :: i, j, g(2), shift(2), idx, dir 
    real(pr)            :: delta, step_time
    real(pr), parameter :: dmax = 0.1
-   integer, parameter  :: steps = 10**6, cycles = 1
+   integer, parameter  :: steps = 10**6, cycles = 4
    integer(int64)      :: s_time, e_time, c_rate
    ! build system 
    pos%pp2d = pp2d([500.0_pr,500.0_pr],3.0_pr)
@@ -19,7 +19,6 @@
       part%pos = part%pos * pos%ll
       call pos%add(i,part)
    end do
-   call pos%reserve()
    ! write initial
    if( pos%rank==0 ) then
      open(1,file="init.txt")
