@@ -1,6 +1,7 @@
    module parallel_universe
    use mpi_f08
    use universe
+   use iso_fortran_env, only: int64
    implicit none
    private
    public pp2d_mpi, pr, particle, pp2d, gridmap
@@ -19,6 +20,7 @@
          integer              :: c_mine(2), w_mine(2) 
       contains
          procedure, private   :: mod2, cl_on
+         procedure            :: randcc, unique_rnd
          procedure            :: start_parallel
          procedure            :: end_parallel
          procedure            :: suggest_mapping
@@ -53,6 +55,15 @@
       cl = c2(2)*pos%nx + c2(1)
       end function cl_on
 
+      function randcc(pos) result(cc)
+      implicit none
+      class(pp2d_mpi), intent(inout) :: pos 
+      integer                        :: cc(2), ierr
+      real(pr)                       :: rnd(2)
+      call random_number(rnd)
+      cc = floor(pos%nxy*rnd)
+      call mpi_bcast( cc, 2, mpi_integer, 0, mpi_comm_world, ierr)
+      end function randcc
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
       subroutine start_parallel(pos)
@@ -64,6 +75,19 @@
       call mpi_comm_size(mpi_comm_world,pos%size,ierr)
       allocate(pos%owner(0:pos%noc-1))
       end subroutine start_parallel
+
+      subroutine unique_rnd(pos)
+      implicit none
+      class(pp2d_mpi), intent(in) :: pos
+      integer                     :: n
+      integer,  allocatable       :: seed(:)
+      integer                     :: time
+      call random_seed(size=n)
+      allocate(seed(n))
+      call system_clock(time)
+      seed = time + pos%rank
+      call random_seed(put=seed)
+      end subroutine unique_rnd
       
       subroutine end_parallel(pos)
       implicit none

@@ -4,7 +4,6 @@
    use iso_fortran_env, only: int64
    implicit none
    type(pp2d_mpi)      :: pos
-   type(particle)      :: part
    type(gridmap)       :: map
    integer             :: i, j, g(2), shift(2), idx, dir 
    real(pr)            :: delta, step_time
@@ -24,9 +23,9 @@
    call pos%suggest_mapping(g)
    call pos%create_mapping(g,map)
    call system_clock(s_time,c_rate)
-   shift = [0,0]
+   call pos%unique_rnd()
    do j = 1, cycles
-      shift = shift+1
+      shift = pos%randcc() 
       call pos%do_mapping(map,shift)
       call pos%stage(pos%c_mine, pos%w_mine-1)
       do i = 1, steps
