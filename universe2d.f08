@@ -478,6 +478,7 @@
       implicit none
       class(pp2d), intent(inout) :: pos
       integer                    :: cl, k, idx
+      call pos%reserve()
       pos%cup%tag = 0 
       do cl = 0, pos%noc-1
          do k = 1, pos%cup(cl)%occ
