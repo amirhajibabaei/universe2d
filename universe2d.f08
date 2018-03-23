@@ -65,7 +65,7 @@
          procedure            :: shrink   => shrink_pp2d   
          procedure            :: write    => write_pp2d    
          procedure            :: reserve  => reserve_pp2d  
-         procedure            :: activate => active_pp2d   
+         procedure            :: stage    => active_pp2d   
          procedure            :: original => original_pp2d 
          procedure            :: random   => random_pp2d   
          procedure            :: move     => move_pp2d

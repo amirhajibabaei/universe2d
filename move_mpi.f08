@@ -34,7 +34,7 @@
    do j = 1, cycles
       shift = shift+1
       call pos%do_mapping(map,shift)
-      call pos%activate(pos%c_mine, pos%w_mine-1)
+      call pos%stage(pos%c_mine, pos%w_mine-1)
       do i = 1, steps
          call pos%random(dmax,idx,dir,delta)
          call pos%move(idx,dir,delta)
