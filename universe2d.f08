@@ -1,19 +1,9 @@
-!
-!  release:
-!                     1  (from mover6.2.f08)
-!  created:
-!                     2018/03/09 18:30
-!
-!  2018/03/12         bugs fixed (scube inequalities and x,y typo's)
-!  2018/03/14         stack%g defined
-!  2018/03/16         read_lammps_pp2d added
-!  2018/03/20         activate_pp2d altered
 
    module universe
    use iso_fortran_env, only: real32, output_unit
    implicit none
    private
-   public      pr,  pp2d, stack, cube, particle
+   public      pr,  pp2d, stack, particle
   
       integer, parameter      :: pr = real32 
 
@@ -254,7 +244,7 @@
       do k = 1, 8 
          su_ww(:,k) = su_cubes(:,k)*pos%ww
       end do
-      pos%stat = 0  
+      pos%stat = 1 
       end function init_pp2d
 
       subroutine associate_pp2d(pos)  
