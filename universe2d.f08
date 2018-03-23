@@ -413,12 +413,15 @@
       else
          ub = pos%nop - 1 
       end if
-      if( allocated(pos%cidx) ) then
-         deallocate(pos%cidx)   
-         deallocate(pos%kidx)  
+      if( .not.allocated(pos%cidx) ) then
+          allocate(pos%cidx(0:ub))   
+          allocate(pos%kidx(0:ub))  
+      else if( ubound(pos%cidx)<ub ) then
+          deallocate(pos%cidx)   
+          deallocate(pos%kidx)  
+          allocate(pos%cidx(0:ub))   
+          allocate(pos%kidx(0:ub))  
       end if
-      allocate(pos%cidx(0:ub))   
-      allocate(pos%kidx(0:ub))  
       end subroutine reserve_pp2d 
 
 
