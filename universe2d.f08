@@ -42,7 +42,7 @@
       end type cube
 
       interface pp2d
-         procedure               init_pp2d, load_pp2d, read_lammps_pp2d
+         procedure               init_pp2d, load_pp2d, hex_pp2d, read_lammps_pp2d
       end interface
 
       type pp2d
@@ -331,6 +331,33 @@
          end do
       end if
       end subroutine write_pp2d
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ lattices
+
+      function hex_pp2d(nxy,rho,wth) result(pos) 
+      implicit none
+      integer,  intent(in) :: nxy(2)
+      real(pr), intent(in) :: rho, wth
+      type(pp2d)           :: pos
+      real(pr)             :: v1(2), v2(2), a, ax, ay
+      integer              :: i, j, idx
+      type(particle)       :: part
+      ax = 0.5_pr
+      ay = sqrt(3.0_pr)/2
+      a = sqrt(1.0_pr/(rho*ay))
+      v1 = a*[1.0_pr,0.0_pr]
+      v2 = a*[ax,ay]
+      pos = pp2d(nxy*[v1(1),v2(2)],wth)
+      idx = -1
+      do j = 0, nxy(2)-1
+         do i = 0, nxy(1)-1
+            idx = idx + 1
+            part%name = idx
+            part%pos  = i*v1 + j*v2
+            call pos%add(idx, part)
+         end do
+      end do
+      end function hex_pp2d
       
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ read lammps
 

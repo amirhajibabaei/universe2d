@@ -12,13 +12,7 @@
    integer, parameter  :: steps = 10**6, cycles = 4
    integer(int64)      :: s_time, e_time, c_rate
    ! build system 
-   pos%pp2d = pp2d([500.0_pr,500.0_pr],3.0_pr)
-   do i = 1, 500*500
-      part%name = i
-      call random_number(part%pos)
-      part%pos = part%pos * pos%ll
-      call pos%add(i,part)
-   end do
+   pos%pp2d = pp2d([100,100],0.962_pr,3.0_pr)
    ! write initial
    if( pos%rank==0 ) then
      open(1,file="init.txt")
