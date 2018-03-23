@@ -13,7 +13,6 @@
    integer(int64)      :: s_time, e_time, c_rate
    ! build system 
    pos%pp2d = pp2d([500.0_pr,500.0_pr],3.0_pr)
-   call pos%assoc()
    do i = 1, 500*500
       part%name = i
       call random_number(part%pos)

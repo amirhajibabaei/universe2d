@@ -245,6 +245,7 @@
          su_ww(:,k) = su_cubes(:,k)*pos%ww
       end do
       pos%stat = 1 
+      call pos%assoc()
       end function init_pp2d
 
       subroutine associate_pp2d(pos)  
