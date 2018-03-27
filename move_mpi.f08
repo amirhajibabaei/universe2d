@@ -8,7 +8,7 @@
    implicit none
    real(pr), parameter :: rho = 0.962_pr, tem = 2.0_pr, rc = 2.5_pr, dmax = 0.1_pr
    real(pr), parameter :: wth = rc+dmax, rc2 = rc**2, ecut = 1.0_pr/rc2**6 - 1.0_pr/rc2**3
-   integer, parameter  :: steps = 10**5, cycles = 100
+   integer, parameter  :: steps = 10**6, cycles = 10**6
    type(pp2d_mpi)      :: pos
    type(gridmap)       :: map
    integer             :: i, j, g(2), shift(2), idx, dir, n
@@ -29,7 +29,7 @@
    call pos%suggest_mapping(g)
    call pos%create_mapping(g,map)
    call pos%unique_rnd()
-   open(17,file="therm.txt")
+   if( pos%rank==0) open(17,file="therm.txt")
    call system_clock(s_time,c_rate)
    do j = 1, cycles
       shift = pos%randcc() 
@@ -56,24 +56,26 @@
          end if
       end do
       call pos%update_all()
-      call pos%stage()
       ! calculate
-      energy = 0.0_pr
-      virial = 0.0_pr
-      do idx = 0, pos%lnop-1
-         call pos%zoom_on(idx,env)
-         n = env%n
-         env%f(1:n) = efunc(env%x(1:n),env%y(1:n))
-         env%g(1:n) = vfunc(env%x(1:n),env%y(1:n))
-         energy = energy + sum(env%f(1:n))
-         virial = virial + sum(env%g(1:n))         
-      end do
-      energy = 2*energy/(pos%lnop)
-      virial = rho*tem + virial/(pos%lx*pos%ly)
-      write(17,*) j, energy, virial
+      if( pos%rank==0) then      
+         call pos%stage()
+         energy = 0.0_pr
+         virial = 0.0_pr
+         do idx = 0, pos%lnop-1
+            call pos%zoom_on(idx,env)
+            n = env%n
+            env%f(1:n) = efunc(env%x(1:n),env%y(1:n))
+            env%g(1:n) = vfunc(env%x(1:n),env%y(1:n))
+            energy = energy + sum(env%f(1:n))
+            virial = virial + sum(env%g(1:n))         
+         end do
+         energy = 2*energy/(pos%lnop)
+         virial = rho*tem + virial/(pos%lx*pos%ly)
+         write(17,*) j, energy, virial
+      end if
    end do
    call system_clock(e_time)
-   close(17)
+   if( pos%rank==0) close(17)
    step_time = real(10**9*dble(e_time-s_time)/(c_rate*steps*cycles))
    write(*,*) step_time, step_time/pos%size 
    ! write last
