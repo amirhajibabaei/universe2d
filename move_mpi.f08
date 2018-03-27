@@ -8,7 +8,7 @@
    implicit none
    real(pr), parameter :: rho = 0.962_pr, tem = 2.0_pr, rc = 2.5_pr, dmax = 0.1_pr
    real(pr), parameter :: wth = rc+dmax, rc2 = rc**2, ecut = 1.0_pr/rc2**6 - 1.0_pr/rc2**3
-   integer, parameter  :: steps = 10**6, cycles = 10**6
+   integer, parameter  :: steps = 10**5, cycles = 10**6
    type(pp2d_mpi)      :: pos
    type(gridmap)       :: map
    integer             :: i, j, g(2), shift(2), idx, dir, n
@@ -71,7 +71,7 @@
          end do
          energy = 2*energy/(pos%lnop)
          virial = rho*tem + virial/(pos%lx*pos%ly)
-         write(17,*) j, energy, virial
+         write(17,*) j, (j*i*pos%size)/pos%lnop, energy, virial
       end if
    end do
    call system_clock(e_time)
