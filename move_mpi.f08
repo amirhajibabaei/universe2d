@@ -15,6 +15,7 @@
    real(pr)            :: delta, step_time, de, rnd
    integer(int64)      :: s_time, e_time, c_rate
    type(stack)         :: env
+   real(pr)            :: energy, virial
    ! build system 
    pos%pp2d = pp2d([128,128],rho,wth)
    ! write initial
@@ -28,6 +29,7 @@
    call pos%suggest_mapping(g)
    call pos%create_mapping(g,map)
    call pos%unique_rnd()
+   open(17,file="therm.txt")
    call system_clock(s_time,c_rate)
    do j = 1, cycles
       shift = pos%randcc() 
@@ -54,8 +56,24 @@
          end if
       end do
       call pos%update_all()
+      call pos%stage()
+      ! calculate
+      energy = 0.0_pr
+      virial = 0.0_pr
+      do idx = 0, pos%lnop-1
+         call pos%zoom_on(idx,env)
+         n = env%n
+         env%f(1:n) = efunc(env%x(1:n),env%y(1:n))
+         env%g(1:n) = vfunc(env%x(1:n),env%y(1:n))
+         energy = energy + sum(env%f(1:n))
+         virial = virial + sum(env%g(1:n))         
+      end do
+      energy = 2*energy/(pos%lnop)
+      virial = rho*tem + virial/(pos%lx*pos%ly)
+      write(17,*) j, energy, virial
    end do
    call system_clock(e_time)
+   close(17)
    step_time = real(10**9*dble(e_time-s_time)/(c_rate*steps*cycles))
    write(*,*) step_time, step_time/pos%size 
    ! write last
@@ -66,7 +84,9 @@
    end if
    ! end mpi
    call pos%end_parallel()
+
    contains
+
       elemental &
       function efunc(x,y) result(en)
       implicit none
@@ -80,4 +100,19 @@
          en = (1.0_pr/r-1.0_pr)/r - ecut
       end if
       end function
+
+      elemental &
+      function vfunc(x,y) result(en)
+      implicit none
+      real(pr), intent(in) :: x, y
+      real(pr)             :: en, r
+      r = x*x+y*y
+      if( r>=rc2 ) then
+         en = 0.0_pr
+      else
+         r = r*r*r
+         en = 6*(2.0_pr/r-1.0_pr)/r 
+      end if
+      end function
+
    end program
