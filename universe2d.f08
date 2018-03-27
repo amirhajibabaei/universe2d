@@ -122,10 +122,10 @@
       class(cube), intent(inout)  :: cub
       integer,        allocatable :: idx(:)
       type(particle), allocatable :: hld(:)
-      idx = [cub%idx,0]       
+      allocate(idx,source=[cub%idx,0])
       deallocate(cub%idx)
       call move_alloc(idx,cub%idx)
-      hld = [cub%hld,cub%hld(1)] 
+      allocate(hld,source=[cub%hld,cub%hld(1)])
       deallocate(cub%hld)
       call move_alloc(hld,cub%hld)
       cub%cap = cub%cap + 1
@@ -138,10 +138,10 @@
       type(particle), allocatable :: hld(:)
       integer                     :: occ
       occ = cub%occ
-      idx = cub%idx(1:occ)
+      allocate(idx,source=cub%idx(1:occ))
       deallocate(cub%idx)
       call move_alloc(idx,cub%idx)
-      hld = cub%hld(1:occ)
+      allocate(hld,source=cub%hld(1:occ))
       deallocate(cub%hld)
       call move_alloc(hld,cub%hld)
       cub%cap = occ
