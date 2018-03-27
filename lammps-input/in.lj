@@ -1,15 +1,21 @@
 
 
 # param
-include         inf
+include         seed
 variable        ny      equal  ${nx}/2
 variable        iniv    equal  $T
 variable        binx    equal  16
 variable        biny    equal  ${binx}/2
+
+
+# schedule
 variable        tdamp   equal  100
-variable        Nev     equal  1000
-variable        Nre     equal  100
+variable        Nev     equal  100000
+variable        Nre     equal  1
 variable        Nfr     equal  ${Nev}*${Nre}
+variable        Ndump   equal  1000000
+variable        Nrst    equal  10000000
+variable        Nrst12  equal  100000
 variable        run     equal  1000000000
 
 
@@ -22,12 +28,13 @@ include		configure.txt
 variable	index string $(v_Conf)
 variable	file1 string therm_${index}.txt
 variable	file2 string snap_${index}.txt
+variable	file3 string dump_${index}.txt
 
 
 # setup
 fix		1 all nvt    temp  ${T} ${T} ${tdamp}
 timestep        ${dtime}
-thermo_style    custom step press temp pe ke 
+thermo_style    custom step press pe ke temp 
 thermo          10000
 
 
@@ -38,15 +45,16 @@ compute         3  all   chunk/atom      bin/2d     x 0 ${binx} y 0 ${biny}    n
 fix             2  all   ave/chunk       ${Nev} ${Nre} ${Nfr}     3      density/number vx vy fx fy c_1[1] c_1[2]       norm sample     ave one    file ${file2}
 fix             3  all   print 1000     " $(step) $(press) $(pe) $(ke) $(c_2[1]) $(c_2[2]) "    file  ${file1}       screen no
 fix             4  all   enforce2d
-dump            1  all   custom  1000000  dump_*.txt      id x y vx vy c_1[1] c_1[2] 
+dump            1  all   custom  ${Ndump}  file3      id x y vx vy c_1[1] c_1[2] 
 
 
 # restart plan
-restart         1000000 restart_*
-restart         10000   restart1   restart2
+restart         ${Nrst}     restart_*
+restart         ${Nrst12}   restart1   restart2
 
 #
 print		'output file 1 = ${file1}'
 print		'output file 2 = ${file2}'
+print		'output file 3 = ${file3}'
 run 		${run} upto
 
