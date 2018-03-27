@@ -19,13 +19,13 @@ with open(inp) as ff:
 #
 try:
    xlim, ylim = int(sys.argv[3]), int(sys.argv[4])
-except IndexError:
+except: # IndexError or ValueError:
    xlim, ylim = lx, ly
 reg = np.logical_and(x<xlim,y<ylim)
 reg2 = np.logical_and(x2<xlim,y2<ylim)
    
 #
-fig = pl.figure(figsize=(10,10))
+fig = pl.figure(figsize=(12,12))
 ax = fig.add_subplot(111)
 ax.scatter(x[reg],y[reg],color='b',label='i')
 ax.scatter(x2[reg2],y2[reg2],color='r',label='f')
