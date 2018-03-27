@@ -45,7 +45,7 @@ compute         3  all   chunk/atom      bin/2d     x 0 ${binx} y 0 ${biny}    n
 fix             2  all   ave/chunk       ${Nev} ${Nre} ${Nfr}     3      density/number vx vy fx fy c_1[1] c_1[2]       norm sample     ave one    file ${file2}
 fix             3  all   print 1000     " $(step) $(press) $(pe) $(ke) $(c_2[1]) $(c_2[2]) "    file  ${file1}       screen no
 fix             4  all   enforce2d
-dump            1  all   custom  ${Ndump}  file3      id x y vx vy c_1[1] c_1[2] 
+dump            1  all   custom  ${Ndump}  ${file3}      id x y vx vy c_1[1] c_1[2] 
 
 
 # restart plan
