@@ -306,15 +306,22 @@
       end function load_pp2d
 
 
-      subroutine write_pp2d(pos,uout,string,ints,reals) 
+      subroutine write_pp2d(pos,handle,string,ints,reals) 
       implicit none
       class(pp2d), intent(in)        :: pos
-      integer,     intent(in)        :: uout
+      class(*),     intent(in)       :: handle
       character(len=*), intent(in), &
                          optional    :: string
       integer, intent(in), optional  :: ints(:)
       real(pr), intent(in), optional :: reals(:)
-      integer                        :: i, j
+      integer                        :: i, j, uout
+      ! 
+      select type (handle)
+      type is (integer)
+         uout = handle
+      type is (character(len=*))
+         open(newunit=uout,file=handle)
+      end select 
       ! header
       if( present(string) ) then
          write(uout,*) string
@@ -348,6 +355,11 @@
             end do
          end do
       end if
+      !
+      select type (handle)
+      type is (character(len=*))
+         close(uout) 
+      end select 
       end subroutine write_pp2d
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ lattices
