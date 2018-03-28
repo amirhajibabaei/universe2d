@@ -306,14 +306,32 @@
       end function load_pp2d
 
 
-      subroutine write_pp2d(pos,uout,num) 
+      subroutine write_pp2d(pos,uout,string,ints,reals) 
       implicit none
-      class(pp2d), intent(in)  :: pos
-      integer,     intent(in)  :: uout, num
-      integer                  :: i, j
-      write(uout,*) 
-      write(uout,*) num
-      write(uout,*)
+      class(pp2d), intent(in)        :: pos
+      integer,     intent(in)        :: uout
+      character(len=*), intent(in), &
+                         optional    :: string
+      integer, intent(in), optional  :: ints(:)
+      real(pr), intent(in), optional :: reals(:)
+      integer                        :: i, j
+      ! header
+      if( present(string) ) then
+         write(uout,*) string
+      else
+         write(uout,*)
+      end if
+      if( present(ints) ) then
+         write(uout,*) ints
+      else
+         write(uout,*)
+      end if
+      if( present(reals) ) then
+         write(uout,*) reals
+      else
+         write(uout,*)
+      end if
+      ! body
       write(uout,*) pos%nop
       write(uout,*) pos%ll
       if( pos%stat==0) then
