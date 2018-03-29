@@ -1,6 +1,6 @@
 
    module universe
-   use iso_fortran_env, only: real32, output_unit
+   use iso_fortran_env, only: real32, int64, output_unit
    implicit none
    private
    public      pr,  pp2d, stack, particle
@@ -312,7 +312,7 @@
       class(*),     intent(in)       :: handle
       character(len=*), intent(in), &
                          optional    :: string
-      integer, intent(in), optional  :: ints(:)
+      class(*), intent(in), optional :: ints(:)
       real(pr), intent(in), optional :: reals(:)
       integer                        :: i, j, uout
       ! 
@@ -329,7 +329,12 @@
          write(uout,*)
       end if
       if( present(ints) ) then
-         write(uout,*) ints
+         select type (ints)
+         type is (integer(int64))
+            write(uout,*) ints
+         type is (integer)
+            write(uout,*) ints
+         end select
       else
          write(uout,*)
       end if
