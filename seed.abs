@@ -1,6 +1,0 @@
-variable        T       equal    2.0
-variable        rho     equal    0.962
-variable        nx      equal    128
-variable        cutoff  equal    2.5
-variable        dmax    string   0.1
-variable        dtime   equal    0.005

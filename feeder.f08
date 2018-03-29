@@ -1,9 +1,9 @@
 ! rational for make:
-!          check for seed.txt
+!          check for mc_restart.txt
 !                             if yes, read seed and pos
 !                             if no, 
-!          check for seed.abs
-!                             if yes, read seed and make pos and seed.txt
+!          check for seed.txt
+!                             if yes, read seed and make pos and mc_restart.txt
 !                             if no,
 !          stop
 !
@@ -48,9 +48,9 @@ contains
    logical                    :: yes
    integer                    :: u
    character(len=20)          :: line(4)
-   inquire(file="seed.txt",exist=yes)
+   inquire(file="mc_restart.txt",exist=yes)
    if( yes ) then
-      open(newunit=u,file="seed.txt",status='old')
+      open(newunit=u,file="mc_restart.txt",status='old')
          select type (sd)
          type is (seed)
             read(u,*) sd
@@ -58,11 +58,11 @@ contains
          read(u,*) timestamp
       close(u)
       wth = sd%rc + sd%dmax
-      pos = pp2d("seed.txt",wth)
+      pos = pp2d("mc_restart.txt",wth)
    else
-      inquire(file="seed.abs",exist=yes)
+      inquire(file="seed.txt",exist=yes)
       if( yes ) then
-        open(newunit=u,file="seed.abs",status='old')
+        open(newunit=u,file="seed.txt",status='old')
             read(u,*) line; read(line(4),*) sd%tem
             read(u,*) line; read(line(4),*) sd%rho
             read(u,*) line; read(line(4),*) sd%nx
@@ -71,7 +71,7 @@ contains
          close(u)
          wth = sd%rc + sd%dmax
          pos = pp2d([sd%nx,sd%nx],sd%rho,wth)
-         call pos%write("seed.txt",string=sd%str(),ints=[0])
+         call pos%write("mc_restart.txt",string=sd%str(),ints=[0])
          timestamp = 0
       else
          write(*,*) "no seed found!"
@@ -85,7 +85,7 @@ contains
    class(seed), intent(in) :: sd
    class(pp2d), intent(in) :: pos
    integer,     intent(in) :: timestamp
-   call pos%write("seed.txt",string=sd%str(),ints=[timestamp])
+   call pos%write("mc_restart.txt",string=sd%str(),ints=[timestamp])
    end subroutine dump
 
 end module seed_md
