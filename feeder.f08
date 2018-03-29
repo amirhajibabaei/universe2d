@@ -45,13 +45,13 @@
    
       subroutine make(sd,pos,timestamp)
       implicit none
-      class(seed), intent(inout) :: sd
-      type(pp2d),    intent(out) :: pos
-      integer,     intent(out)   :: timestamp
-      real(pr)                   :: wth
-      logical                    :: yes
-      integer                    :: u
-      character(len=20)          :: line(4)
+      class(seed), intent(inout)  :: sd
+      type(pp2d),    intent(out)  :: pos
+      integer(int64), intent(out) :: timestamp
+      real(pr)                    :: wth
+      logical                     :: yes
+      integer                     :: u
+      character(len=20)           :: line(4)
       inquire(file="mc_restart.txt",exist=yes)
       if( yes ) then
          open(newunit=u,file="mc_restart.txt",status='old')
@@ -85,9 +85,9 @@
    
       subroutine dump(sd,pos,timestamp)
       implicit none
-      class(seed), intent(in) :: sd
-      class(pp2d), intent(in) :: pos
-      integer,     intent(in) :: timestamp
+      class(seed),    intent(in) :: sd
+      class(pp2d),    intent(in) :: pos
+      integer(int64), intent(in) :: timestamp
       call pos%write("mc_restart.txt",string=sd%str(),ints=[timestamp])
       end subroutine dump
    
