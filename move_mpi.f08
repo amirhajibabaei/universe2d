@@ -2,7 +2,9 @@
 !      1. increasing the update frequency by a factor of 10
 !         increases the overall cost by a factor of 2.
 !
-!      2. timestamp*nop = total mc trials
+!      2. timestamp is normalized by nop
+!
+!      3. nrush = timestamps per cpu each cycle 
 !
    program parallel_metropolis
    use universe, only: stack
@@ -17,7 +19,8 @@
    type(seed)          :: sd
    integer(int64)      :: s_time, e_time, c_rate, timestamp
    integer             :: g(2), shift(2), idx, dir, n,  cycle_reward, &
-                          step, steps, cyc, cycles, uscalars, uvectors, nrush
+                          step, steps, cyc, cycles, uscalars, uvectors, &
+                          nrush, cyc_dump
    real(pr)            :: energy, virial, delta, step_time, de, psi(2), &
                           rho, tem, rc, rc2, ecut, dmax, rnd, a0, rn2
    ! build system 
@@ -44,7 +47,8 @@
       steps = (nrush + 1 )*pos%nop 
    end if
    cycle_reward = nrush*pos%size
-   cycles       = 10**1
+   cyc_dump     = max(10**6/cycle_reward,1)
+   cycles       = 100*cyc_dump
 
    ! run
    call pos%suggest_mapping(g)
@@ -103,7 +107,7 @@
          psi = psi/pos%nop
          write(uscalars,*) timestamp, energy, virial, psi
          call sd%dump(pos,timestamp)
-         if( mod(timestamp,10**6)==0 ) call pos%write(uvectors,ints=[timestamp])
+         if( mod(cyc,cyc_dump)==0 ) call pos%write(uvectors,string="new",ints=[timestamp])
       end if
 
    end do
