@@ -87,6 +87,7 @@
          real(pr)             :: r(nstk)
          real(pr)             :: f(nstk)
          real(pr)             :: g(nstk)
+         real(pr)             :: h(nstk)
       end type stack
 
    contains
