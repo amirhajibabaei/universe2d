@@ -84,15 +84,17 @@
       end if
       end subroutine make
 
-      subroutine open(uscalars)
+      subroutine open(uscalars,uvectors)
       implicit none
-      integer,      intent(out)  :: uscalars
+      integer,      intent(out)  :: uscalars, uvectors
       logical                    :: yes
       inquire(file="mc_scalars.txt",exist=yes)
       if( yes ) then
          open(newunit=uscalars,file="mc_scalars.txt",status="old",action="write",access="append")
+         open(newunit=uvectors,file="mc_vectors.txt",status="old",action="write",access="append")
       else
          open(newunit=uscalars,file="mc_scalars.txt",status="new",action="write")
+         open(newunit=uvectors,file="mc_vectors.txt",status="new",action="write")
       end if
       end subroutine open
    
