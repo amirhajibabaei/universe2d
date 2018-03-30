@@ -4,38 +4,41 @@
    program parallel_metropolis
    use universe, only: stack
    use parallel_universe
+   use seed_md, only: seed
    use iso_fortran_env, only: int64
    implicit none
-   real(pr), parameter :: rho = 0.962_pr, tem = 2.0_pr, rc = 2.5_pr, dmax = 0.1_pr
-   real(pr), parameter :: wth = rc+dmax, rc2 = rc**2, ecut = 1.0_pr/rc2**6 - 1.0_pr/rc2**3
-   integer, parameter  :: steps = 10**5, cycles = 10**6
    type(pp2d_mpi)      :: pos
    type(gridmap)       :: map
-   integer             :: i, j, g(2), shift(2), idx, dir, n
-   real(pr)            :: delta, step_time, de, rnd
-   integer(int64)      :: s_time, e_time, c_rate
    type(stack)         :: env
-   real(pr)            :: energy, virial
+   type(seed)          :: sd
+   integer(int64)      :: s_time, e_time, c_rate, timestamp
+   integer             :: g(2), shift(2), idx, dir, n,  &
+                           step, steps, cyc, cycles, uscalars
+   real(pr)            :: energy, virial, delta, step_time, de, &
+                           rho, tem, rc, rc2, ecut, dmax, rnd
    ! build system 
-   pos%pp2d = pp2d([128,128],rho,wth)
-   ! write initial
-   if( pos%rank==0 ) then
-     open(1,file="init.txt")
-        call pos%write(1,0)
-     close(1)
-   end if
+   call sd%make(pos%pp2d,timestamp)
+   rc   = sd%rc
+   rc2  = rc*rc
+   ecut = 1.0_pr/rc2**6 - 1.0_pr/rc2**3
+   dmax = sd%dmax
+   tem  = sd%tem
+   rho  = sd%rho
+   steps = 10**5
+   cycles = 10**1
+
    ! mpi
    call pos%start_parallel()
    call pos%suggest_mapping(g)
    call pos%create_mapping(g,map)
    call pos%unique_rnd()
-   if( pos%rank==0) open(17,file="therm.txt")
+   if( pos%rank==0 ) call sd%open(uscalars)
    call system_clock(s_time,c_rate)
-   do j = 1, cycles
+   do cyc = 1, cycles
       shift = pos%randcc() 
       call pos%do_mapping(map,shift)
       call pos%stage(pos%c_mine, pos%w_mine-1)
-      do i = 1, steps
+      do step = 1, steps
          call pos%random(dmax,idx,dir,delta)
          call pos%zoom_on(idx,env)
          n = env%n
@@ -56,6 +59,7 @@
          end if
       end do
       call pos%update_all()
+      timestamp = timestamp + steps*pos%size
       ! calculate
       if( pos%rank==0) then      
          call pos%stage()
@@ -71,19 +75,14 @@
          end do
          energy = 2*energy/(pos%lnop)
          virial = rho*tem + virial/(pos%lx*pos%ly)
-         write(17,*) j, (j*i*pos%size)/pos%lnop, energy, virial
+         write(uscalars,*) timestamp, energy, virial
+         call sd%dump(pos,timestamp)
       end if
    end do
    call system_clock(e_time)
-   if( pos%rank==0) close(17)
+   if( pos%rank==0 ) close(uscalars)
    step_time = real(10**9*dble(e_time-s_time)/(c_rate*steps*cycles))
    write(*,*) step_time, step_time/pos%size 
-   ! write last
-   if( pos%rank==0 ) then
-     open(1,file="fin.txt")
-        call pos%write(1,-1)
-     close(1)
-   end if
    ! end mpi
    call pos%end_parallel()
 

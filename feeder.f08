@@ -26,7 +26,8 @@
          real(pr)         :: rc
          real(pr)         :: dmax
       contains
-         procedure        :: make, str, dump
+         procedure         :: make, str, dump
+         procedure, nopass :: open
       end type seed
    
    contains
@@ -82,6 +83,18 @@
          end if
       end if
       end subroutine make
+
+      subroutine open(uscalars)
+      implicit none
+      integer,      intent(out)  :: uscalars
+      logical                    :: yes
+      inquire(file="mc_scalars.txt",exist=yes)
+      if( yes ) then
+         open(newunit=uscalars,file="mc_scalars.txt",status="old",action="write",access="append")
+      else
+         open(newunit=uscalars,file="mc_scalars.txt",status="new",action="write")
+      end if
+      end subroutine open
    
       subroutine dump(sd,pos,timestamp)
       implicit none
@@ -90,5 +103,5 @@
       integer(int64), intent(in) :: timestamp
       call pos%write("mc_restart.txt",string=sd%str(),ints=[timestamp])
       end subroutine dump
-   
+
    end module seed_md
