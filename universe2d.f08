@@ -1,6 +1,6 @@
 
    module universe
-   use iso_fortran_env, only: real32, output_unit
+   use iso_fortran_env, only: real32, int64, output_unit
    implicit none
    private
    public      pr,  pp2d, stack, particle
@@ -306,14 +306,44 @@
       end function load_pp2d
 
 
-      subroutine write_pp2d(pos,uout,num) 
+      subroutine write_pp2d(pos,handle,string,ints,reals) 
       implicit none
-      class(pp2d), intent(in)  :: pos
-      integer,     intent(in)  :: uout, num
-      integer                  :: i, j
-      write(uout,*) 
-      write(uout,*) num
-      write(uout,*)
+      class(pp2d), intent(in)        :: pos
+      class(*),     intent(in)       :: handle
+      character(len=*), intent(in), &
+                         optional    :: string
+      class(*), intent(in), optional :: ints(:)
+      real(pr), intent(in), optional :: reals(:)
+      integer                        :: i, j, uout
+      ! 
+      select type (handle)
+      type is (integer)
+         uout = handle
+      type is (character(len=*))
+         open(newunit=uout,file=handle)
+      end select 
+      ! header
+      if( present(string) ) then
+         write(uout,*) string
+      else
+         write(uout,*)
+      end if
+      if( present(ints) ) then
+         select type (ints)
+         type is (integer(int64))
+            write(uout,*) ints
+         type is (integer)
+            write(uout,*) ints
+         end select
+      else
+         write(uout,*)
+      end if
+      if( present(reals) ) then
+         write(uout,*) reals
+      else
+         write(uout,*)
+      end if
+      ! body
       write(uout,*) pos%nop
       write(uout,*) pos%ll
       if( pos%stat==0) then
@@ -330,6 +360,11 @@
             end do
          end do
       end if
+      !
+      select type (handle)
+      type is (character(len=*))
+         close(uout) 
+      end select 
       end subroutine write_pp2d
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ lattices
