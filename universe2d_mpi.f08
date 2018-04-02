@@ -1,7 +1,7 @@
    module parallel_universe
    use mpi_f08
    use universe
-   use iso_fortran_env, only: int64
+   use iso_fortran_env, only: int64, real32, real64
    implicit none
    private
    public pp2d_mpi, pr, particle, pp2d, gridmap
@@ -199,20 +199,40 @@
       implicit none
       class(pp2d_mpi), intent(inout) :: pos 
       integer                        :: i, ierr, occ, owner
-      do i = 0, pos%noc-1
-         owner = pos%owner(i)
-         if( owner==-1 ) cycle
-         occ = pos%cup(i)%occ
-         call mpi_bcast(occ, 1, mpi_integer, owner, mpi_comm_world, ierr)
-         do
-            if( occ<=pos%cup(i)%cap ) exit
-            call pos%cup(i)%ext()
+      if( pr==4 ) then
+         do i = 0, pos%noc-1
+            owner = pos%owner(i)
+            if( owner==-1 ) cycle
+            occ = pos%cup(i)%occ
+            call mpi_bcast(occ, 1, mpi_integer, owner, mpi_comm_world, ierr)
+            do
+               if( occ<=pos%cup(i)%cap ) exit
+               call pos%cup(i)%ext()
+            end do
+            call mpi_bcast( pos%cup(i)%hld(1:occ)%name  , occ, mpi_integer, owner, mpi_comm_world, ierr)
+            call mpi_bcast( pos%cup(i)%hld(1:occ)%pos(1), occ, mpi_real,    owner, mpi_comm_world, ierr)
+            call mpi_bcast( pos%cup(i)%hld(1:occ)%pos(2), occ, mpi_real,    owner, mpi_comm_world, ierr)
+            pos%cup(i)%occ = occ
          end do
-         call mpi_bcast( pos%cup(i)%hld(1:occ)%name  , occ, mpi_integer, owner, mpi_comm_world, ierr)
-         call mpi_bcast( pos%cup(i)%hld(1:occ)%pos(1), occ, mpi_real,    owner, mpi_comm_world, ierr)
-         call mpi_bcast( pos%cup(i)%hld(1:occ)%pos(2), occ, mpi_real,    owner, mpi_comm_world, ierr)
-         pos%cup(i)%occ = occ
-      end do
+      elseif( pr==8 ) then
+         do i = 0, pos%noc-1
+            owner = pos%owner(i)
+            if( owner==-1 ) cycle
+            occ = pos%cup(i)%occ
+            call mpi_bcast(occ, 1, mpi_integer, owner, mpi_comm_world, ierr)
+            do
+               if( occ<=pos%cup(i)%cap ) exit
+               call pos%cup(i)%ext()
+            end do
+            call mpi_bcast( pos%cup(i)%hld(1:occ)%name  , occ, mpi_integer, owner, mpi_comm_world, ierr)
+            call mpi_bcast( pos%cup(i)%hld(1:occ)%pos(1), occ, mpi_double_precision, owner, mpi_comm_world, ierr)
+            call mpi_bcast( pos%cup(i)%hld(1:occ)%pos(2), occ, mpi_double_precision, owner, mpi_comm_world, ierr)
+            pos%cup(i)%occ = occ
+         end do
+      else
+         write(*,*) "wrong kind!"
+         stop
+      end if
       end subroutine update_all 
 
    end module parallel_universe
