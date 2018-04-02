@@ -47,7 +47,12 @@
    ! mpi setup
    call pos%start_parallel()
    call pos%unique_rnd()
-   if( pos%rank==0 ) call sd%open(uscalars,uvectors)
+   if( pos%rank==0 ) then
+      open(newunit=n,file="mc_notes.txt")
+      write(n,*) "xlat", a0, "hexrc", sqrt(rn2), "ww-rc-dmax", pos%ww-rc-dmax
+      close(n)
+      call sd%open(uscalars,uvectors)
+   end if
 
    ! scheduling
    if( pos%rank==0 ) then
@@ -127,7 +132,7 @@
       close(uscalars)
       close(uvectors)
       step_time = real(10**9*dble(e_time-s_time)/(c_rate*all_cycles*cycle_reward*pos%nop))
-      open(newunit=n,file="mc_notes.txt")
+      open(newunit=n,file="mc_speed_notes.txt")
          write(n,*) "cost of step: ", pos%size*step_time, " / "
          write(n,*) "num of procs: ", pos%size
          write(n,*) "             =", step_time
