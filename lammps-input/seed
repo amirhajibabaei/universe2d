@@ -1,6 +1,0 @@
-variable        T       equal  {T}
-variable        rho     equal  {R}
-variable        nx      equal  {N}
-variable        cutoff  equal  {c}
-variable        dtime   equal  {t}
-
