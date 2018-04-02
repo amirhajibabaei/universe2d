@@ -48,8 +48,8 @@ dump            1  all   custom  ${Ndump}  ${file3}      id x y vx vy
 
 
 # restart plan
-restart         ${Nrst}     restart_*
-restart         ${Nrst12}   restart1   restart2
+restart         ${Nrst}     md_restart_*
+restart         ${Nrst12}   md_restart1   md_restart2
 
 #
 print		'output file 1 = ${file1}'
