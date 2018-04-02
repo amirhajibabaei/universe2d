@@ -25,7 +25,9 @@ def configure():
    index1 = max(int(v.replace('md_vectors_','').replace('.txt','')) for v in glob.glob(file1))
    index2 = max(int(v.replace('md_snap_','').replace('.txt','')) for v in glob.glob(file2))
    index  = max(index1, index2)
-   time.sleep(1)
+   # dummy open to delay return
+   with open(configfile,'r') as f:
+      line = f.readline()
    return index + 1
 
 
