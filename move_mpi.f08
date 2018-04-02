@@ -1,16 +1,18 @@
 ! note: 
-!      1. increasing the update frequency by a factor of 10
-!         increases the overall cost by a factor of 2.
+!      increasing the update frequency by a factor of 10
+!      increases the overall cost by a factor of 2.
 !
-!      2. timestamp is normalized by nop
-!
-!      3. nrush = timestamps per cpu each cycle 
+! scheduling:
+!      a sweep is N trials
+!      a cycle  is ncpu*tdamp sweeps + an update
+!      timestamp is in sweeps
+!      a cycle_reward is ncpu*tdamp timestamps
 !
    program parallel_metropolis
-   use universe, only: stack
-   use parallel_universe
-   use seed_md, only: seed
-   use iso_fortran_env, only: int64
+   use universe,          only: stack, pr
+   use parallel_universe, only: pp2d_mpi, gridmap
+   use seed_md,           only: seed
+   use iso_fortran_env,   only: int64
    implicit none
    real(pr), parameter :: pi = 3.14159265359_pr
    type(pp2d_mpi)      :: pos
@@ -19,20 +21,28 @@
    type(seed)          :: sd
    integer(int64)      :: s_time, e_time, c_rate, timestamp
    integer             :: g(2), shift(2), idx, dir, n,  cycle_reward, &
-                          step, steps, cyc, cycles, uscalars, uvectors, &
-                          nrush, cyc_dump
+                          step, steps, cyc, all_cycles, uscalars, uvectors, &
+                          tdamp, dump_every, cyc_dump, dump_total
    real(pr)            :: energy, virial, delta, step_time, de, psi(2), &
                           rho, tem, rc, rc2, ecut, dmax, rnd, a0, rn2
+   character(len=20)   :: arg
    ! build system 
    call sd%make(pos%pp2d,timestamp)
-   rc   = sd%rc
-   rc2  = rc*rc
-   ecut = 1.0_pr/rc2**6 - 1.0_pr/rc2**3
-   dmax = sd%dmax
-   tem  = sd%tem
-   rho  = sd%rho
-   a0   = sqrt(2.0_pr/(rho*sqrt(3.0_pr)))
-   rn2  = (1.5_pr*a0)**2
+
+   ! parameters of simulation
+   rc    = sd%rc
+   rc2   = rc*rc
+   ecut  = 1.0_pr/rc2**6 - 1.0_pr/rc2**3
+   dmax  = sd%dmax
+   tem   = sd%tem
+   rho   = sd%rho
+   a0    = sqrt(2.0_pr/(rho*sqrt(3.0_pr)))
+   rn2   = (1.5_pr*a0)**2
+   tdamp = 1000
+   dump_every = 10**6
+   dump_total = 100
+   call get_command_argument(1,arg)
+   if( len_trim(arg)>0 ) read(arg,*) dump_total
 
    ! mpi setup
    call pos%start_parallel()
@@ -40,21 +50,20 @@
    if( pos%rank==0 ) call sd%open(uscalars,uvectors)
 
    ! scheduling
-   nrush = 1000
    if( pos%rank==0 ) then
-      steps = (nrush + 1 - pos%size)*pos%nop 
+      steps = (tdamp + 1 - pos%size)*pos%nop 
    else
-      steps = (nrush + 1 )*pos%nop 
+      steps = (tdamp + 1 )*pos%nop 
    end if
-   cycle_reward = nrush*pos%size
-   cyc_dump     = max(10**6/cycle_reward,1)
-   cycles       = 100*cyc_dump
+   cycle_reward = tdamp*pos%size
+   cyc_dump     = max(dump_every/cycle_reward,1)
+   all_cycles   = dump_total*cyc_dump
 
    ! run
    call pos%suggest_mapping(g)
    call pos%create_mapping(g,map)
    call system_clock(s_time,c_rate)
-   do cyc = 1, cycles
+   do cyc = 1, all_cycles
 
       ! main
       shift = pos%randcc() 
@@ -117,9 +126,13 @@
    if( pos%rank==0 ) then 
       close(uscalars)
       close(uvectors)
+      step_time = real(10**9*dble(e_time-s_time)/(c_rate*all_cycles*cycle_reward*pos%nop))
+      open(newunit=n,file="mc_notes.txt")
+         write(n,*) "cost of step: ", pos%size*step_time, " / "
+         write(n,*) "num of procs: ", pos%size
+         write(n,*) "             =", step_time
+      close(n)
    end if
-   step_time = real(10**9*dble(e_time-s_time)/(c_rate*cycles*cycle_reward*pos%nop))
-   write(*,*) pos%size, pos%rank, step_time
    call pos%end_parallel()
 
    contains
