@@ -55,6 +55,7 @@ restart         ${Nrst12}   md_restart1   md_restart2
 print		'output file 1 = ${file1}'
 print		'output file 2 = ${file2}'
 print		'output file 3 = ${file3}'
+print           'xlat $(xlat)  hexrc  $(1.5*xlat)' file "md_params.txt"
 
 run 		${run} upto
 
