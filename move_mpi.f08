@@ -38,7 +38,7 @@
    rho   = sd%rho
    a0    = sqrt(2.0_pr/(rho*sqrt(3.0_pr)))
    rn2   = (1.5_pr*a0)**2
-   tdamp = 1000
+   tdamp = sd%tdamp
    dump_every = 10**6
    dump_total = 100
    call get_command_argument(1,arg)
