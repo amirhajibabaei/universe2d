@@ -5,7 +5,7 @@ def configure():
    import os
    import glob
    import time
-   configfile = 'configure.txt'
+   configfile = 'lmp_configure'
    file1 = 'md_vectors_*.txt'
    file2 = 'md_snap_*.txt'
    os.system('rm -f '+configfile)
@@ -17,7 +17,7 @@ def configure():
    elif len(glob.glob('md_restart_*'))>0:
       config = 'md_restart_*'
    if not config:
-      os.system('cat ini.box > '+configfile)
+      os.system('cat lmp_box > '+configfile)
       #os.system('rm -f '+file1+' '+file2)
       return 1
    with open(configfile,'w') as f:

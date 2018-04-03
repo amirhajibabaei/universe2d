@@ -21,9 +21,9 @@ variable        run     equal  100000/${dtime}
 # create
 processors      * * 1
 variable 	Conf python configure
-python 		configure return v_Conf format i file funcs.py
+python 		configure return v_Conf format i file lmp_funcs.py
 python 		configure invoke
-include		configure.txt
+include		lmp_configure
 variable	index string $(v_Conf)
 variable	file1 string md_scalars.txt
 variable	file2 string md_snap_${index}.txt
