@@ -5,9 +5,8 @@ def configure():
    import os
    import glob
    import time
+   # 
    configfile = 'lmp_configure'
-   file1 = 'md_vectors_*.txt'
-   file2 = 'md_snap_*.txt'
    os.system('rm -f '+configfile)
    config = None
    if   os.path.isfile('md_restart1'): 
@@ -18,16 +17,17 @@ def configure():
       config = 'md_restart_*'
    if not config:
       os.system('cat lmp_box > '+configfile)
-      #os.system('rm -f '+file1+' '+file2)
+      time.sleep(0.1)
       return 1
+   #
    with open(configfile,'w') as f:
       f.write('read_restart '+config+'\n')
+   file1 = 'md_vectors_*.txt'
+   file2 = 'md_snap_*.txt'
    index1 = max(int(v.replace('md_vectors_','').replace('.txt','')) for v in glob.glob(file1))
    index2 = max(int(v.replace('md_snap_','').replace('.txt','')) for v in glob.glob(file2))
    index  = max(index1, index2)
-   # dummy open to delay return
-   with open(configfile,'r') as f:
-      line = f.readline()
+   time.sleep(0.1)
    return index + 1
 
 
