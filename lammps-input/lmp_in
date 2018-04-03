@@ -17,6 +17,12 @@ variable        Nrst    equal  10000000
 variable        Nrst12  equal  100000
 variable        run     equal  100000/${dtime}
 
+# basic
+dimension       2
+boundary        p p p
+atom_style	atomic
+lattice		hex ${rho}   origin 0 0 0
+
 
 # create
 processors      * * 1
