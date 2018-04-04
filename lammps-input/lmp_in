@@ -1,5 +1,4 @@
 
-
 # param
 include         seed.txt
 variable        ny      equal  ${nx}/2
@@ -13,27 +12,24 @@ variable        Nev     equal  100000
 variable        Nre     equal  1
 variable        Nfr     equal  ${Nev}*${Nre}
 variable        Ndump   equal  1000000
-variable        Nrst    equal  10000000
-variable        Nrst12  equal  100000
+variable        Nrst    equal  100000
 variable        run     equal  100000/${dtime}
 
 # basic
 dimension       2
 boundary        p p p
+processors      * * 1
 atom_style	atomic
 lattice		hex ${rho}   origin 0 0 0
 
 
-# create
-processors      * * 1
-variable 	Conf python configure
-python 		configure return v_Conf format i file lmp_funcs.py
-python 		configure invoke
-include		lmp_configure
-variable	index string $(v_Conf)
+# create or read
+shell           ./lmp_configure.sh
+include		lmp_temp
+shell           rm lmp_temp
 variable	file1 string md_scalars.txt
-variable	file2 string md_snap_${index}.txt
-variable	file3 string md_vectors_${index}.txt
+variable	file2 string md_snaps.txt
+variable	file3 string md_vectors.txt
 
 
 # setup
@@ -54,8 +50,7 @@ dump            1  all   custom  ${Ndump}  ${file3}      id x y vx vy
 
 
 # restart plan
-restart         ${Nrst}     md_restart_*
-restart         ${Nrst12}   md_restart1   md_restart2
+restart         ${Nrst}   md_restart md_restart_alt 
 
 #
 print		'output file 1 = ${file1}'
