@@ -3,9 +3,11 @@
    use iso_fortran_env, only: real32, int64, output_unit
    implicit none
    private
-   public      pr,  pp2d, stack, particle
+   public      pr,  pp2d, stack, particle, pi
   
       integer, parameter      :: pr = real32 
+
+      real(pr), parameter     :: pi = 3.14159265359_pr
 
       type particle
           integer             :: name   
@@ -88,6 +90,8 @@
          real(pr)             :: f(nstk)
          real(pr)             :: g(nstk)
          real(pr)             :: h(nstk)
+      contains
+         procedure            :: hexorder
       end type stack
 
    contains
@@ -736,5 +740,37 @@
             pos%kidx( idx ) = kk 
       end if
       end subroutine move_pp2d
+   
+      !//////////////////////////////////////
+      !//////////////////////////////////////           stack
+      !//////////////////////////////////////
+
+      pure &
+      function hexorder(env) result(psi)
+      implicit none
+      class(stack), intent(in) :: env
+      integer                  :: i, n, l(1)
+      real(pr)                 :: psi(2), r, x, y, theta, &
+                                  d(max(1,env%n))
+      logical                  :: mask(max(1,env%n))
+      n = env%n
+      psi = 0.0_pr
+      if( n>=6 ) then
+         d = env%x(1:n)**2 + env%y(1:n)**2
+         mask = .true.
+         do i = 1, 6
+            l = minloc(d,mask)
+            r = sqrt(d(l(1)))
+            x = env%x(l(1))
+            y = env%y(l(1))
+            theta = acos(x/r) 
+            if( y<0.0_pr ) theta = 2*pi - theta
+            psi = psi + [cos(6*theta),sin(6*theta)]
+            mask(l(1)) = .false.
+         end do
+         psi = psi/6
+      end if
+      end function hexorder
+
 
    end module universe 

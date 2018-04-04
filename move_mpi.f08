@@ -112,9 +112,7 @@
             env%g(1:n) = vfunc(env%x(1:n),env%y(1:n))
             energy = energy + sum(env%f(1:n))
             virial = virial + sum(env%g(1:n))         
-            call order(env%x(1:n),env%y(1:n),env%f(1:n),env%g(1:n),env%h(1:n))
-            rnd = sum(env%f(1:n))
-            if(rnd>=1.0_pr) psi = psi + [sum(env%g(1:n)),sum(env%h(1:n))]/rnd 
+            psi = psi + env%hexorder()
          end do
          energy = 2*energy/(pos%lnop)
          virial = rho*tem + virial/(pos%lx*pos%ly)
@@ -169,26 +167,5 @@
          en = 6*(2.0_pr/r-1.0_pr)/r 
       end if
       end function
-
-      elemental &
-      subroutine order(x,y,n,or,oi) 
-      implicit none
-      real(pr), intent(in)  :: x, y
-      real(pr), intent(out) :: n, or, oi
-      real(pr)              :: r, theta
-      r = x*x+y*y
-      if( r>=rn2 ) then
-         n = 0.0_pr
-         or = 0.0_pr
-         oi = 0.0
-      else
-         n = 1.0_pr
-         r = sqrt(r)
-         theta = acos(x/r) 
-         if( y<0.0_pr ) theta = 2*pi - theta
-         or = cos(6*theta)
-         oi = sin(6*theta)
-      end if
-      end subroutine
 
    end program
