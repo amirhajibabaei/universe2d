@@ -14,7 +14,6 @@
    use seed_md,           only: seed
    use iso_fortran_env,   only: int64
    implicit none
-   real(pr), parameter :: pi = 3.14159265359_pr
    type(pp2d_mpi)      :: pos
    type(gridmap)       :: map
    type(stack)         :: env
@@ -24,7 +23,7 @@
                           step, steps, cyc, all_cycles, uscalars, uvectors, &
                           tdamp, dump_every, cyc_dump, dump_total
    real(pr)            :: energy, virial, delta, step_time, de, psi(2), &
-                          rho, tem, rc, rc2, ecut, dmax, rnd, a0, rn2
+                          rho, tem, rc, rc2, ecut, dmax, rnd
    character(len=20)   :: arg
    ! build system 
    call sd%make(pos%pp2d,timestamp)
@@ -36,8 +35,6 @@
    dmax  = sd%dmax
    tem   = sd%tem
    rho   = sd%rho
-   a0    = sqrt(2.0_pr/(rho*sqrt(3.0_pr)))
-   rn2   = (1.5_pr*a0)**2
    tdamp = sd%tdamp
    dump_every = 10**6
    dump_total = 100
@@ -48,9 +45,6 @@
    call pos%start_parallel()
    call pos%unique_rnd()
    if( pos%rank==0 ) then
-      open(newunit=n,file="mc_notes.txt")
-      write(n,*) "xlat", a0, "hexrc", sqrt(rn2), "ww-rc-dmax", pos%ww-rc-dmax
-      close(n)
       call sd%open(uscalars,uvectors)
    end if
 
