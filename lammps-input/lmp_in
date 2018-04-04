@@ -40,7 +40,7 @@ thermo          10000
 
 
 # runtime
-compute         1  all   hexorder/atom   degree 6 nnn NULL cutoff $(1.5*xlat)
+compute         1  all   hexorder/atom   
 compute         2  all   reduce  ave     c_1[1] c_1[2]
 compute         3  all   chunk/atom      bin/2d     x 0 ${binx} y 0 ${biny}    nchunk once    ids every 
 fix             2  all   ave/chunk       ${Nev} ${Nre} ${Nfr}     3      density/number vx vy fx fy c_1[1] c_1[2]       norm sample     ave one    file ${file2}
@@ -56,7 +56,6 @@ restart         ${Nrst}   md_restart md_restart_alt
 print		'output file 1 = ${file1}'
 print		'output file 2 = ${file2}'
 print		'output file 3 = ${file3}'
-print           'xlat $(xlat)  hexrc  $(1.5*xlat)' file "md_notes.txt"
 
 run 		${run} # upto
 
