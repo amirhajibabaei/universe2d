@@ -20,4 +20,4 @@ echo "Got $NSLOTS slots."
     #
     #######################################################
 
-    mpirun -n $NSLOTS /home/amir/.exe/mc_mpi  
+    mpirun -n $NSLOTS /home/amir/.exe/mc_alpha  
