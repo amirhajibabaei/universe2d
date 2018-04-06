@@ -19,8 +19,9 @@
    public seed
    
       type seed
-         character(len=6) :: names(6) = ["tem   ","rho   ", &
+         character(len=6) :: names(6) = ["alpha ","tem   ","rho   ", &
                              "nx    ","rc    ","dmax  ","tdamp "]
+         real(pr)         :: alpha 
          real(pr)         :: tem 
          real(pr)         :: rho
          integer          :: nx
@@ -70,6 +71,7 @@
          inquire(file="seed.txt",exist=yes)
          if( yes ) then
            open(newunit=u,file="seed.txt",status='old')
+               read(u,*) line; read(line(4),*) sd%alpha
                read(u,*) line; read(line(4),*) sd%tem
                read(u,*) line; read(line(4),*) sd%rho
                read(u,*) line; read(line(4),*) sd%nx

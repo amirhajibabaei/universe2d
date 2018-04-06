@@ -23,7 +23,7 @@
                           step, steps, cyc, all_cycles, uscalars, uvectors, &
                           tdamp, dump_every, cyc_dump, dump_total
    real(pr)            :: energy, virial, delta, step_time, de, psi(2), &
-                          rho, tem, rc, rc2, ecut, dmax, rnd
+                          rho, tem, rc, rc2, ecut, dmax, rnd, alpha
    character(len=20)   :: arg
    ! build system 
    call sd%make(pos%pp2d,timestamp)
@@ -34,6 +34,7 @@
    ecut  = 1.0_pr/rc2**6 - 1.0_pr/rc2**3
    dmax  = sd%dmax
    tem   = sd%tem
+   alpha = sd%alpha
    rho   = sd%rho
    tdamp = sd%tdamp
    dump_every = 10**6
@@ -144,7 +145,7 @@
          en = 0.0_pr
       else
          r = r*r*r
-         en = (1.0_pr/r-1.0_pr)/r - ecut
+         en = (1.0_pr/r-alpha)/r - ecut
       end if
       end function
 
@@ -158,7 +159,7 @@
          en = 0.0_pr
       else
          r = r*r*r
-         en = 6*(2.0_pr/r-1.0_pr)/r 
+         en = 6*(2.0_pr/r-alpha)/r 
       end if
       end function
 
