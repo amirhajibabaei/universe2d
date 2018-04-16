@@ -2,7 +2,7 @@
 
 # initiate variables
 home=`pwd`
-alias python=python2.7
+alias python=python2
 source scripts/get_com_args.sh
 
 # path
