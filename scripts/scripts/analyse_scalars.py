@@ -5,4 +5,4 @@ o = o1**2+o2**2
 ndat = len(t)
 nskip = ndat/10
 avgs = [ s[nskip:].mean() for s in [u,p,o] ]
-print t[-1], "{} {} {}".format(*avgs)
+print t[-1], "{0} {1} {2}".format(*avgs)
