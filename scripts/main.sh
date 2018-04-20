@@ -26,6 +26,15 @@ do
 	elif [ $act == "list" ]
 	then
 		echo $D
+	elif [ $act == "progress" ]
+	then
+		if [ -f $D/mc_restart.txt ]
+		then
+			echo $D `sed -n "2p" $D/mc_restart.txt`
+		else
+			echo $D 0
+		fi
+
 	else
 		echo "unknown act: $act"
 	fi
