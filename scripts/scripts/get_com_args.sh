@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#    -R=root  -c=cutoff  -a=alpha  -t=tem  -n=nx  -r=rho
+#    -R=root  -c=cutoff  -a=alpha  -t=tem  -n=nx  -r=rho -act=act
 #
 for i in "$@"
 do
@@ -27,6 +27,10 @@ do
 		;;
 		-r=*|--rho=*)
 		rho="${i#*=}"
+		shift	# past argument = value
+		;;
+		-act=*|--action=*)
+		act="${i#*=}"
 		shift	# past argument = value
 		;;
 		--default)

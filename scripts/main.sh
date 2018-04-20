@@ -20,6 +20,13 @@ function lsdirs {
 for D in `lsdirs`
 do
 	source ./scripts/get_seed.sh $D/seed.txt  # defines cuts alphas rhos tems nxs
-
-	echo $rhos `python scripts/analyse_scalars.py $D/mc_scalars.txt`
+	if [ $act == "avg" ]
+	then
+		echo $rhos `python scripts/analyse_scalars.py $D/mc_scalars.txt`
+	elif [ $act == "list" ]
+	then
+		echo $D
+	else
+		echo "unknown act: $act"
+	fi
 done
