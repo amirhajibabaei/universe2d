@@ -34,6 +34,9 @@ do
 		else
 			echo $D 0
 		fi
+	elif [ $act == "post" ]
+	then
+		echo $rhos `python scripts/auto_cf.py $D/mc_scalars.txt`
 
 	else
 		echo "unknown act: $act"
