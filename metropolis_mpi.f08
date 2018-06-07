@@ -70,7 +70,7 @@
       call pos%do_mapping(map,shift)
       call pos%stage(pos%c_mine, pos%w_mine-1)
       do step = 1, steps
-         call pos%random(dmax,idx,dir,delta)
+         call pos%random(-dmax,dmax,idx,dir,delta)
          call pos%zoom_on(idx,env)
          n = env%n
          env%f(1:n) = efunc(env%x(1:n),env%y(1:n))

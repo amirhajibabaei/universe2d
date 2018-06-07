@@ -561,10 +561,10 @@
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
       recursive &
-      subroutine random_pp2d(pos,dmax,idx,dir,delta) 
+      subroutine random_pp2d(pos,dmin,dmax,idx,dir,delta) 
       implicit none
       class(pp2d), intent(in) :: pos
-      real(pr),    intent(in) :: dmax
+      real(pr),    intent(in) :: dmin, dmax
       integer,    intent(out) :: idx, dir
       real(pr),   intent(out) :: delta
       real(pr)                :: rand_pr
@@ -580,7 +580,7 @@
          dir = 2
       end if
       call random_number(rand_pr)
-      delta = (2*rand_pr-1.0_pr) * dmax
+      delta = dmin + rand_pr*(dmax-dmin)
       ! check if forbiden
       rand_pr = pos%cup(cl)%hld(k)%pos(dir) + delta 
       if( rand_pr>=pos%ww(dir) ) then
