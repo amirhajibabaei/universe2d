@@ -586,11 +586,11 @@
       if( rand_pr>=pos%ww(dir) ) then
          ncl = pos%cup(cl)%su(dir)
          if( pos%cup(ncl)%tag==1 ) &
-         call pos%random(dmax,idx,dir,delta)
+         call pos%random(dmin,dmax,idx,dir,delta)
       else if( rand_pr<0.0_pr ) then
          ncl = pos%cup(cl)%su(dir+2)
          if( pos%cup(ncl)%tag==1 ) &
-         call pos%random(dmax,idx,dir,delta)
+         call pos%random(dmin,dmax,idx,dir,delta)
       end if
       end subroutine random_pp2d
 
