@@ -30,7 +30,7 @@ do
 	then
 		if [ -f $D/mc_restart.txt ]
 		then
-			echo $D `sed -n "2p" $D/mc_restart.txt`
+			echo $D `sed -n "2p" $D/mc_restart.txt`  `ls $D/*.pe* | xargs -n1 basename | sed 's/.*\.pe//' `
 		else
 			echo $D 0
 		fi
