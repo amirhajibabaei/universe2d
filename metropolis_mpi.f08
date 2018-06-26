@@ -21,7 +21,7 @@
    integer(int64)      :: s_time, e_time, c_rate, timestamp
    integer             :: g(2), shift(2), idx, dir, n,  cycle_reward, &
                           step, steps, cyc, all_cycles, uscalars, uvectors, &
-                          tdamp, dump_every, cyc_dump, dump_total
+                          tdamp, dump_every, cyc_dump, dump_total, ntry, nsuccess
    real(pr)            :: energy, virial, delta, step_time, de, psi(2), &
                           rho, tem, rc, rc2, ecut, dmax, rnd, alpha
    character(len=20)   :: arg
@@ -60,6 +60,8 @@
    all_cycles   = dump_total*cyc_dump
 
    ! run
+   ntry = 0
+   nsuccess = 0
    call pos%suggest_mapping(g)
    call pos%create_mapping(g,map)
    call system_clock(s_time,c_rate)
@@ -81,18 +83,32 @@
          end if
          de = 4*sum(env%g(1:n)-env%f(1:n))
          if( de<=0.0_pr ) then
-            call pos%move(idx,dir,delta)
+            call pos%move(idx,dir,delta) ; nsuccess = nsuccess + 1
          else
             call random_number(rnd)
             if(rnd<=exp(-de/tem)) then
-               call pos%move(idx,dir,delta)
+               call pos%move(idx,dir,delta) ; nsuccess = nsuccess + 1
             end if
          end if
       end do
 
       ! timestamp
       call pos%update_all()
-      timestamp = timestamp + cycle_reward 
+      timestamp = timestamp + cycle_reward
+
+      ! tune dmax but keep it less than sd%dmax 
+      ntry = ntry + steps
+      if( ntry>1000 ) then
+         rnd = real(nsuccess/ntry)
+         if( rnd>0.5 ) then
+              dmax = 1.05*dmax
+         else
+              dmax = 0.95*dmax
+         end if
+         if( dmax>sd%dmax ) dmax = sd%dmax
+         ntry = 0
+         nsuccess = 0
+      end if
 
       ! calculate
       if( pos%rank==0) then      
