@@ -374,12 +374,14 @@
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ lattices
 
-      function hex_pp2d(nxy,rho,wth) result(pos) 
+      function hex_pp2d(nxy,rho,wth,f_distort) result(pos) 
       implicit none
       integer,  intent(in) :: nxy(2)
       real(pr), intent(in) :: rho, wth
+      real(pr), intent(in),   &
+             optional      :: f_distort
       type(pp2d)           :: pos
-      real(pr)             :: v1(2), v2(2), a, ax, ay
+      real(pr)             :: v1(2), v2(2), a, ax, ay, rnd, delta
       integer              :: i, j, idx
       type(particle)       :: part
       ax = 0.5_pr
@@ -388,12 +390,18 @@
       v1 = a*[1.0_pr,0.0_pr]
       v2 = a*[ax,ay]
       pos = pp2d(nxy*[v1(1),v2(2)],wth)
+      if( present(f_distort) ) then
+              delta = f_distort*a
+      else
+              delta = 0.0_pr
+      end if
       idx = -1
       do j = 0, nxy(2)-1
          do i = 0, nxy(1)-1
+            call random_number(rnd) ; rnd = rnd * delta
             idx = idx + 1
             part%name = idx
-            part%pos  = i*v1 + j*v2
+            part%pos  = i*v1 + j*v2 + rnd
             call pos%add(idx, part)
          end do
       end do
