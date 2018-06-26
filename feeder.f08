@@ -19,7 +19,7 @@
    public seed
    
       type seed
-         character(len=6) :: names(6) = ["alpha ","tem   ","rho   ", &
+         character(len=6) :: names(7) = ["alpha ","tem   ","rho   ", &
                              "nx    ","rc    ","dmax  ","tdamp ","dehex "]
          real(pr)         :: alpha 
          real(pr)         :: tem 
