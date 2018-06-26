@@ -44,6 +44,7 @@
 
    ! mpi setup
    call pos%start_parallel()
+   call pos%bcast_from_master()    ! maybe redundant 
    call pos%unique_rnd()
    if( pos%rank==0 ) then
       call sd%open(uscalars,uvectors)
