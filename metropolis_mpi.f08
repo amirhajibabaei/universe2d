@@ -100,7 +100,7 @@
       ! tune dmax but keep it less than sd%dmax 
       ntry = ntry + steps
       if( ntry>1000 ) then
-         rnd = real(nsuccess/ntry)
+         rnd = real(nsuccess)/ntry
          if( rnd>0.5 ) then
               dmax = 1.05*dmax
          else
