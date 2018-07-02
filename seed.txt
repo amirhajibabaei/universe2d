@@ -3,7 +3,7 @@ variable        T       equal    2.0
 variable        rho     equal    0.962
 variable        nx      equal    64
 variable        cutoff  equal    2.5
-variable        dmax    equal    0.15
-variable        tdamp   equal    200
+variable        dmax    equal    0.3
+variable        tdamp   equal    1000
 variable        dehex   equal    0.3
 variable        dtime   equal    0.005
