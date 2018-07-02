@@ -381,7 +381,7 @@
       real(pr), intent(in),   &
              optional      :: f_distort
       type(pp2d)           :: pos
-      real(pr)             :: v1(2), v2(2), a, ax, ay, rnd, delta
+      real(pr)             :: v1(2), v2(2), a, ax, ay, rnd(2), delta
       integer              :: i, j, idx
       type(particle)       :: part
       ax = 0.5_pr
