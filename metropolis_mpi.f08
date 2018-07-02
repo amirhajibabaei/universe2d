@@ -134,19 +134,27 @@
          if( mod(cyc,cyc_dump)==0 ) call pos%write(uvectors,string="new",ints=[timestamp])
       end if
 
+      ! speed calculator
+      if( pos%rank==0 ) then 
+         call system_clock(e_time)
+         step_time = real(10**9*dble(e_time-s_time)/(c_rate*cycle_reward*pos%nop))
+         open(newunit=n,file="mc_speed_notes.txt")
+            write(n,*) "cost of step: ", pos%size*step_time, " / "
+            write(n,*) "num of procs: ", pos%size
+            write(n,*) "             =", step_time
+            write(n,*) 
+            write(n,*) "dmax         =", dmax, sd%dmax
+         close(n)
+         call system_clock(s_time,c_rate)
+      end if
+
+
    end do
-   call system_clock(e_time)
 
    ! end mpi
    if( pos%rank==0 ) then 
       close(uscalars)
       close(uvectors)
-      step_time = real(10**9*dble(e_time-s_time)/(c_rate*all_cycles*cycle_reward*pos%nop))
-      open(newunit=n,file="mc_speed_notes.txt")
-         write(n,*) "cost of step: ", pos%size*step_time, " / "
-         write(n,*) "num of procs: ", pos%size
-         write(n,*) "             =", step_time
-      close(n)
    end if
    call pos%end_parallel()
 
