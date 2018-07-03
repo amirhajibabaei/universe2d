@@ -391,17 +391,17 @@
       v2 = a*[ax,ay]
       pos = pp2d(nxy*[v1(1),v2(2)],wth)
       if( present(f_distort) ) then
-              delta = f_distort*a
+              delta = f_distort
       else
               delta = 0.0_pr
       end if
       idx = -1
       do j = 0, nxy(2)-1
          do i = 0, nxy(1)-1
-            call random_number(rnd) ; rnd = rnd * delta
+            call random_number(rnd) 
             idx = idx + 1
             part%name = idx
-            part%pos  = i*v1 + j*v2 + rnd
+            part%pos  = i*v1 + j*v2 + ( rnd(1)*v1 + rnd(2)*v2 )*delta
             call pos%add(idx, part)
          end do
       end do
