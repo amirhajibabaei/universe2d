@@ -72,6 +72,7 @@
          procedure            :: random   => random_pp2d   
          procedure            :: move     => move_pp2d
          procedure            :: zoom_on  => scube_pp2d 
+         procedure            :: metro    => metropolis_pp2d
       end type pp2d
 
       integer, parameter      :: su_cubes(2,8) = &
@@ -749,6 +750,48 @@
       end if
       end subroutine move_pp2d
    
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      subroutine metropolis_pp2d(pos,efunc,eargs,tem,dmax,steps,nsuccess)
+      implicit none
+      class(pp2d), intent(inout) :: pos
+      interface 
+         function efunc(x,y,args) result(en)
+         import pr 
+         implicit none
+         real(pr), intent(in) :: x(:), y(:), args(:)
+         real(pr)             :: en(size(x))
+         end function
+      end interface
+      real(pr),    intent(in)    :: eargs(:), tem, dmax
+      integer,     intent(in)    :: steps
+      integer,     intent(out)   :: nsuccess
+      integer                    :: step, idx, dir, n
+      real(pr)                   :: delta, de, rnd
+      type(stack)                :: env
+      nsuccess = 0
+      do step = 1, steps
+         call pos%random(-dmax,dmax,idx,dir,delta)
+         call pos%zoom_on(idx,env)
+         n = env%n
+         env%f(1:n) = efunc(env%x(1:n),env%y(1:n),eargs)
+         if( dir==1 ) then
+            env%g(1:n) = efunc(env%x(1:n)-delta,env%y(1:n),eargs)
+         else
+            env%g(1:n) = efunc(env%x(1:n),env%y(1:n)-delta,eargs)
+         end if
+         de = sum(env%g(1:n)-env%f(1:n))
+         if( de<=0.0_pr ) then
+            call pos%move(idx,dir,delta) ; nsuccess = nsuccess + 1
+         else
+            call random_number(rnd)
+            if(rnd<=exp(-de/tem)) then
+               call pos%move(idx,dir,delta) ; nsuccess = nsuccess + 1
+            end if
+         end if
+      end do
+      end subroutine metropolis_pp2d
+
       !//////////////////////////////////////
       !//////////////////////////////////////           stack
       !//////////////////////////////////////
