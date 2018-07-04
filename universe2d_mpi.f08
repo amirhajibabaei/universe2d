@@ -28,6 +28,7 @@
          procedure            :: do_mapping
          procedure            :: update_all 
          procedure            :: bcast_from_master 
+         procedure            :: metro_mpi => metropolis 
       end type pp2d_mpi
    
    contains
@@ -275,6 +276,32 @@
       end if
       end subroutine bcast_from_master
 
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      subroutine metropolis(pos,efunc,eargs,tem,dmax,steps,nsuccess)
+      implicit none
+      class(pp2d_mpi), intent(inout) :: pos 
+      interface 
+         function efunc(x,y,args) result(en)
+         import pr 
+         implicit none
+         real(pr), intent(in) :: x(:), y(:), args(:)
+         real(pr)             :: en(size(x))
+         end function
+      end interface
+      real(pr),    intent(in)    :: eargs(:), tem, dmax
+      integer,     intent(in)    :: steps
+      integer,     intent(out)   :: nsuccess
+      type(gridmap)              :: map
+      integer                    :: g(2), shift(2)
+      call pos%suggest_mapping(g)
+      call pos%create_mapping(g,map)
+      shift = pos%randcc() 
+      call pos%do_mapping(map,shift)
+      call pos%stage(pos%c_mine, pos%w_mine-1)
+      call pos%metro(efunc,eargs,tem,dmax,steps,nsuccess)
+      call pos%update_all()
+      end subroutine metropolis
 
    end module parallel_universe
 
