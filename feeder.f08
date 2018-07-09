@@ -19,8 +19,8 @@
    public seed
    
       type seed
-         character(len=6) :: names(8) = ["alpha ","tem   ","rho   ", &
-                             "nx    ","rc    ","dmax  ","tdamp ","dehex "]
+         character(len=6) :: names(7) = ["alpha ","tem   ","rho   ", &
+                             "nx    ","rc    ","dmax  ","tdamp "]
          real(pr)         :: alpha 
          real(pr)         :: tem 
          real(pr)         :: rho
@@ -28,7 +28,6 @@
          real(pr)         :: rc
          real(pr)         :: dmax
          integer          :: tdamp
-         real(pr)         :: dehex
       contains
          procedure         :: make, str, dump
          procedure, nopass :: open
@@ -79,10 +78,9 @@
                read(u,*) line; read(line(4),*) sd%rc
                read(u,*) line; read(line(4),*) sd%dmax
                read(u,*) line; read(line(4),*) sd%tdamp
-               read(u,*) line; read(line(4),*) sd%dehex
             close(u)
             wth = sd%rc + sd%dmax
-            pos = pp2d([sd%nx,sd%nx],sd%rho,wth,sd%dehex)
+            pos = pp2d([sd%nx,sd%nx],sd%rho,wth)
             timestamp = 0
          else
             write(*,*) "no seed found!"

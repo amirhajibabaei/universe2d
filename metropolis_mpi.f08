@@ -62,17 +62,6 @@
    cyc_dump     = max(dump_every/cycle_reward,1)
    all_cycles   = dump_total*cyc_dump
 
-   ! initial tempering to cool or hot states
-   if( timestamp == 0 ) then
-      do cyc = 1, 3
-         if( sd%dehex>0.3_pr ) then
-            call pos%metro_mpi(efunc2,[rc2,alpha,ecut],3.0*tem,dmax,steps,nsuccess)
-         else
-            call pos%metro_mpi(efunc2,[rc2,alpha,ecut],0.3*tem,dmax,steps,nsuccess)
-         end if
-      end do
-   end if 
-
    ! run
    ntry = 0
    nsuccess = 0
@@ -199,19 +188,6 @@
          r = r*r*r
          en = 6*(2.0_pr/r-alpha)/r 
       end if
-      end function
-
-      function efunc2(x,y,args) result(en)
-      implicit none
-      real(pr), intent(in) :: x(:), y(:), args(:)
-      real(pr)             :: en(size(x)), r(size(x))
-      r = x*x+y*y
-      where( r>=args(1) ) 
-         en = 0.0_pr
-      elsewhere
-         r = r*r*r
-         en = 4*((1.0_pr/r-args(2))/r - args(3))
-      endwhere
       end function
 
    end program
