@@ -289,26 +289,39 @@
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 
-      function load_pp2d(fname, wth) result(pos) 
+      function load_pp2d(handle, wth) result(pos) 
       implicit none
-      character(len=*), intent(in)    :: fname
+      class(*),         intent(in)    :: handle
       real(pr),         intent(in)    :: wth
       type(pp2d)                      :: pos
       integer                         :: uin, i, num
       real(pr)                        :: lx, ly
       type(particle)                  :: p
-      open( newunit=uin, file=fname )
-         read(uin,*)
-         read(uin,*)
-         read(uin,*)
-         read(uin,*) num
-         read(uin,*) lx, ly
-         pos = pp2d([lx,ly],wth)
-         do i = 0, num-1
-             read(uin,*) p
-             call pos%add(i,p)
-         end do
-      close(uin)
+      logical                         :: doclose
+      
+      doclose = .false.
+      select type(handle)
+      type is (integer)
+         uin = handle
+      type is (character(len=*))
+         open( newunit=uin, file=handle )
+         doclose = .true.
+      class default
+         stop
+      end select
+
+      read(uin,*)
+      read(uin,*)
+      read(uin,*)
+      read(uin,*) num
+      read(uin,*) lx, ly
+      pos = pp2d([lx,ly],wth)
+      do i = 0, num-1
+          read(uin,*) p
+          call pos%add(i,p)
+      end do
+
+      if( doclose ) close(uin)
       end function load_pp2d
 
 
