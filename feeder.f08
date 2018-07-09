@@ -29,7 +29,7 @@
          real(pr)         :: dmax
          integer          :: tdamp
       contains
-         procedure         :: make, str, dump
+         procedure         :: make, str, dump, read
          procedure, nopass :: open
       end type seed
    
@@ -37,7 +37,7 @@
 
       subroutine read(sd)
       implicit none
-      type(seed), intent(inout)  :: sd
+      class(seed), intent(inout)  :: sd
       integer                    :: u
       character(len=20)          :: line(4)
       open(newunit=u,file="seed.txt",status='old')
