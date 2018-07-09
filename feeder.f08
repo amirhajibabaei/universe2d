@@ -34,7 +34,23 @@
       end type seed
    
    contains
-   
+
+      subroutine read(sd)
+      implicit none
+      type(seed), intent(inout)  :: sd
+      integer                    :: u
+      character(len=20)          :: line(4)
+      open(newunit=u,file="seed.txt",status='old')
+          read(u,*) line; read(line(4),*) sd%alpha
+          read(u,*) line; read(line(4),*) sd%tem
+          read(u,*) line; read(line(4),*) sd%rho
+          read(u,*) line; read(line(4),*) sd%nx
+          read(u,*) line; read(line(4),*) sd%rc
+          read(u,*) line; read(line(4),*) sd%dmax
+          read(u,*) line; read(line(4),*) sd%tdamp
+      close(u)
+      end subroutine read
+
       function str(sd) result(string)
       implicit none
       class(seed), intent(in)    :: sd
