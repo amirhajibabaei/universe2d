@@ -101,7 +101,7 @@
    
       subroutine suggest_mapping(pos,best)
       implicit none
-      class(pp2d_mpi), intent(inout) :: pos 
+      class(pp2d_mpi), intent(in) :: pos 
       integer,         intent(out)   :: best(2)
       integer                        :: q, qx, qy
       integer                        :: nbx, nby
@@ -136,7 +136,7 @@
    
       subroutine create_mapping(pos,q,map)
       implicit none
-      class(pp2d_mpi), intent(inout) :: pos 
+      class(pp2d_mpi), intent(in) :: pos 
       integer,         intent(in)    :: q(2)
       type(gridmap),  intent(out)    :: map
       integer                        :: w(2), r(2) 
