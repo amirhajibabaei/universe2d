@@ -106,7 +106,7 @@
       write(u,*) str2, h%miss2, real(h%miss2)/h%total
       write(u,*) str3, h%hit, real(h%hit)/h%total
       ! body
-      write(u,*) h%bins + 1
+      write(u,*) h%bins + 1, h%x1, h%dx
       do i = 0, h%bins
          p = real(h%count(i))/h%total
          write(u,*) h%x1 + i*h%dx, h%count(i), p, p/h%dx 
