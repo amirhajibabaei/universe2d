@@ -87,29 +87,41 @@
       integer, intent(in), optional :: uout
       integer                       :: i, u
       real(pr)                      :: p
+      character(len=20)             :: str1, str2, str3
       if( present(uout) ) then
               u = uout
       else
               u= output_unit
       end if
-      !
+      ! header
+      write(str1,*)h%x1  
+      write(str2,*)h%x1 + (h%bins+1)*h%dx 
+      str1 = "# x<"//trim(adjustl(str1))
+      str2 = "# x>="//trim(adjustl(str2))
+      str3 = "# else"  
       write(u,*)
-      write(u,*) "# x <", h%x1, h%miss1, real(h%miss1)/h%total
+      write(u,*)
+      write(u,*)
+      write(u,*) str1, h%miss1, real(h%miss1)/h%total
+      write(u,*) str2, h%miss2, real(h%miss2)/h%total
+      write(u,*) str3, h%hit, real(h%hit)/h%total
+      ! body
+      write(u,*) h%bins + 1
       do i = 0, h%bins
          p = real(h%count(i))/h%total
          write(u,*) h%x1 + i*h%dx, h%count(i), p, p/h%dx 
       end do
-      write(u,*) "# x >=", h%x1 + (h%bins+1)*h%dx, h%miss2, real(h%miss2)/h%total
-      write(u,*)
       end subroutine write
    
    end module histogram
 
-!   ! example:
-!   
+   ! example:
+   
 !   program main
-!   use histogram, only: hist1d, pr
+!   use histogram, only: hist1d
+!   use iso_fortran_env, only: real32
 !   implicit none
+!   integer, parameter :: pr = real32
 !   type(hist1d) :: h
 !   real(pr) :: x(10), xx
 !   integer  :: i
