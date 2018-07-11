@@ -7,11 +7,11 @@
 !  type(hist1d) :: h
 !  call h%init(x1,x2,dx)
 !  call h%gather(x)        ! x is scalar or 1d array
-!  call h%write(unit)      ! unit optional
+!  call h%write(unit,[str],[ints],...)      
 !
 !
    module histogram
-   use iso_fortran_env, only: real32, output_unit
+   use iso_fortran_env, only: real32
    implicit none
    private
    public  hist1d 
@@ -92,46 +92,70 @@
       end subroutine reset
   
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   
-      subroutine write(h,uout)
-      implicit none 
-      class(hist1d), intent(in)     :: h
-      integer, intent(in), optional :: uout
-      integer                       :: i, u
-      real(pr)                      :: p
-      character(len=20)             :: str1, str2, str3
-      if( present(uout) ) then
-              u = uout
+      
+      subroutine write(h,handle,string,ints,reals) 
+      implicit none
+      class(hist1d), intent(in)      :: h
+      class(*),     intent(in)       :: handle
+      character(len=*), intent(in), &
+                         optional    :: string
+      integer,  intent(in), optional :: ints(:)
+      real(pr), intent(in), optional :: reals(:)
+      integer                        :: i, uout
+      character(len=20)              :: str1, str2, str3
+      real(pr)                       :: p
+      ! 
+      select type (handle)
+      type is (integer)
+         uout = handle
+      type is (character(len=*))
+         open(newunit=uout,file=handle)
+      end select 
+      ! header: 3 lines
+      if( present(string) ) then
+         write(uout,*) "# ", string
       else
-              u= output_unit
+         write(uout,*) "# "
       end if
-      ! header
+      if( present(ints) ) then
+         write(uout,*) "# ", ints
+      else
+         write(uout,*) "# "
+      end if
+      if( present(reals) ) then
+         write(uout,*) "# ", reals
+      else
+         write(uout,*) "# "
+      end if
+      ! abstract: 3 lines
       write(str1,*)h%x1  
       write(str2,*)h%x1 + (h%bins+1)*h%dx 
       str1 = "# x<"//trim(adjustl(str1))
       str2 = "# x>="//trim(adjustl(str2))
       str3 = "# else"  
-      write(u,*)
-      write(u,*)
-      write(u,*)
-      write(u,*) str1, h%miss1, real(h%miss1)/h%total
-      write(u,*) str2, h%miss2, real(h%miss2)/h%total
-      write(u,*) str3, h%hit, real(h%hit)/h%total
+      write(uout,*) str1, h%miss1, real(h%miss1)/h%total
+      write(uout,*) str2, h%miss2, real(h%miss2)/h%total
+      write(uout,*) str3, h%hit, real(h%hit)/h%total
       ! body
-      write(u,*) h%bins + 1, h%x1, h%dx
+      write(uout,*) h%bins + 1, h%x1, h%dx
       do i = 0, h%bins
          p = real(h%count(i))/h%total
-         write(u,*) h%x1 + i*h%dx, h%count(i), p, p/h%dx 
+         write(uout,*) h%x1 + i*h%dx, h%count(i), p, p/h%dx 
       end do
+      !
+      select type (handle)
+      type is (character(len=*))
+         close(uout) 
+      end select 
       end subroutine write
-   
+
    end module histogram
 
    ! example:
    
 !   program main
 !   use histogram, only: hist1d
-!   use iso_fortran_env, only: real32
+!   use iso_fortran_env, only: real32, output_unit
 !   implicit none
 !   integer, parameter :: pr = real32
 !   type(hist1d) :: h
@@ -144,5 +168,5 @@
 !      call random_number(xx)
 !      call h%gather(xx)
 !   end do
-!   call h%write()
+!   call h%write(output_unit)
 !   end program main
