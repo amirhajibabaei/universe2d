@@ -86,6 +86,7 @@
       class(hist1d), intent(in)     :: h
       integer, intent(in), optional :: uout
       integer                       :: i, u
+      real(pr)                      :: p
       if( present(uout) ) then
               u = uout
       else
@@ -93,11 +94,12 @@
       end if
       !
       write(u,*)
-      write(u,*) "# x <", h%x1, h%miss1
+      write(u,*) "# x <", h%x1, h%miss1, real(h%miss1)/h%total
       do i = 0, h%bins
-         write(u,*) h%x1 + i*h%dx, h%count(i)
+         p = real(h%count(i))/h%total
+         write(u,*) h%x1 + i*h%dx, h%count(i), p, p/h%dx 
       end do
-      write(u,*) "# x >=", h%x1 + (h%bins+1)*h%dx, h%miss2
+      write(u,*) "# x >=", h%x1 + (h%bins+1)*h%dx, h%miss2, real(h%miss2)/h%total
       write(u,*)
       end subroutine write
    
