@@ -24,7 +24,7 @@
             integer, allocatable  :: count(:)
             integer               :: miss1, hit, miss2, total
          contains
-            procedure             :: init, write 
+            procedure             :: init, write, reset 
             procedure, private    :: gather_a, gather_s
             generic               :: gather => gather_s, gather_a
       end type          hist1d
@@ -78,7 +78,19 @@
          call gather_s(h,x(i))
       end do
       end subroutine gather_a
-   
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      subroutine reset(h)
+      implicit none
+      class(hist1d), intent(inout) :: h
+      h%count = 0
+      h%miss1 = 0
+      h%hit   = 0
+      h%miss2 = 0
+      h%total = 0
+      end subroutine reset
+  
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    
       subroutine write(h,uout)
