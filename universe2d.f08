@@ -816,7 +816,10 @@
       real(pr)                :: p(q**2), area
       integer                 :: w(2), i, j, cx, cy, cl, lnop, b
       w = pos%nxy/q
-      if( any(w==0) ) stop
+      if( any(w==0) ) then
+              p = pos%nop/(pos%lx*pos%ly)
+              return
+      end if
       area = w(1)*pos%wx*w(2)*pos%wy
       do j = 0, q-1
          do i = 0, q-1
