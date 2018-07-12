@@ -25,11 +25,11 @@
    integer             :: g(2), shift(2), idx, dir, n,  cycle_reward, &
                           step, steps, cyc, all_cycles, uscalars, uvectors, &
                           tdamp, dump_every, cyc_dump, dump_total, ntry, nsuccess, &
-                          u8, u16, u32
+                          u8, u16, u4
    real(pr)            :: energy, virial, delta, step_time, de, psi(2), &
                           rho, tem, rc, rc2, ecut, dmax, rnd, alpha
    character(len=20)   :: arg
-   type(hist1d)        :: hst8, hst16, hst32
+   type(hist1d)        :: hst4, hst8, hst16
    ! build system 
    call sd%make(pos%pp2d,timestamp)
 
@@ -52,14 +52,14 @@
    call pos%bcast_from_master()    ! maybe redundant 
    call pos%unique_rnd()
    if( pos%rank==0 ) then
+      call fopen("mc_dprof_4.txt",u4)
       call fopen("mc_dprof_8.txt",u8)
       call fopen("mc_dprof_16.txt",u16)
-      call fopen("mc_dprof_32.txt",u32)
+      call sd%open(uscalars,uvectors)
       delta = 1.0_pr/(pos%wx*pos%wy*256)
+      call hst4%init(rho-0.03_pr,rho+0.03_pr,delta)
       call hst8%init( rho-0.03_pr,rho+0.03_pr,delta)
       call hst16%init(rho-0.03_pr,rho+0.03_pr,delta)
-      call hst32%init(rho-0.03_pr,rho+0.03_pr,delta)
-      call sd%open(uscalars,uvectors)
    end if
 
    ! scheduling
@@ -142,22 +142,19 @@
          virial = rho*tem + virial/(pos%lx*pos%ly)
          psi = psi/pos%nop
          write(uscalars,*) timestamp, energy, virial, psi
+         call hst4%gather(pos%dprof(4))
          call hst8%gather(pos%dprof(8))
          call hst16%gather(pos%dprof(16))
-         call hst32%gather(pos%dprof(32))
          call sd%dump(pos,timestamp)
          if( mod(cyc,cyc_dump)==0 ) then
                  call pos%write(uvectors,string="new",ints=[timestamp])
-                 call hst8%write(u8,ints=[timestamp])
-                 call hst16%write(u16,ints=[timestamp])
-                 call hst32%write(u32,ints=[timestamp])
-                 call hst8%reset() 
-                 call hst16%reset() 
-                 call hst32%reset() 
+                 call hst4%write(u4,ints=[timestamp])  ; call hst4%reset() 
+                 call hst8%write(u8,ints=[timestamp])  ; call hst8%reset() 
+                 call hst16%write(u16,ints=[timestamp]); call hst16%reset() 
          end if
       end if
 
-      ! speed calculator
+      ! mc runtime notes
       if( pos%rank==0 ) then 
          call system_clock(e_time)
          step_time = real(10**9*dble(e_time-s_time)/(c_rate*cycle_reward*pos%nop))
@@ -173,16 +170,15 @@
          call system_clock(s_time,c_rate)
       end if
 
-
    end do
 
    ! end mpi
    if( pos%rank==0 ) then 
       close(uscalars)
       close(uvectors)
+      close(u4)
       close(u8)
       close(u16)
-      close(u32)
    end if
    call pos%end_parallel()
 
