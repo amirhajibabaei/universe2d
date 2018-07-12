@@ -1,0 +1,6 @@
+variable        pow     equal    12
+variable        cutoff  equal    2.5
+variable        rho     equal    0.962
+variable        nx      equal    64
+variable        dmax    equal    0.3
+variable        tdamp   equal    1000
