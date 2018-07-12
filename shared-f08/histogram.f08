@@ -111,6 +111,9 @@
       type is (character(len=*))
          open(newunit=uout,file=handle)
       end select 
+      ! 2 empty lines
+      write(uout,*)
+      write(uout,*)
       ! header: 3 lines
       if( present(string) ) then
          write(uout,*) "# ", string
@@ -141,8 +144,8 @@
       write(uout,*) str1, h%miss1, real(h%miss1)/h%total
       write(uout,*) str2, h%miss2, real(h%miss2)/h%total
       write(uout,*) str3, h%hit, real(h%hit)/h%total
+      write(uout,*) "# ", h%bins + 1, h%x1, h%dx
       ! body
-      write(uout,*) h%bins + 1, h%x1, h%dx
       do i = 0, h%bins
          p = real(h%count(i))/h%total
          write(uout,*) h%x1 + i*h%dx, h%count(i), p, p/h%dx 
