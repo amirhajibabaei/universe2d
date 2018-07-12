@@ -51,10 +51,9 @@
       call fopen("mc_dprof_8.txt",u8)
       call fopen("mc_dprof_16.txt",u16)
       call sd%open(uscalars,uvectors)
-      delta = 1.0_pr/(pos%wx*pos%wy*256)
-      call hst4%init(rho-0.03_pr,rho+0.03_pr,delta)
-      call hst8%init( rho-0.03_pr,rho+0.03_pr,delta)
-      call hst16%init(rho-0.03_pr,rho+0.03_pr,delta)
+      call hst4%init(rho-0.03_pr,rho+0.03_pr,pos%drho(4))
+      call hst8%init( rho-0.03_pr,rho+0.03_pr,pos%drho(8))
+      call hst16%init(rho-0.03_pr,rho+0.03_pr,pos%drho(16))
    end if
 
    ! scheduling

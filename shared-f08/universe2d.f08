@@ -74,6 +74,7 @@
          procedure            :: zoom_on  => scube_pp2d 
          procedure            :: metro    => metropolis_pp2d
          procedure            :: dprof    => density_profile
+         procedure            :: drho 
       end type pp2d
 
       integer, parameter      :: su_cubes(2,8) = &
@@ -835,6 +836,25 @@
          end do
       end do
       end function density_profile 
+
+      pure &
+      function drho(pos,q) 
+      implicit none
+      class(pp2d), intent(in) :: pos
+      integer,     intent(in) :: q
+      real(pr)                :: drho
+      integer                 :: w(2)
+      w = pos%nxy/q
+      if( any(w==0) ) then
+              drho = 0.001
+              return
+      end if
+      drho = 1.0_pr / (w(1)*pos%wx*w(2)*pos%wy)
+      do
+         if(drho>5.0e-4) exit
+         drho = 2*drho
+      end do
+      end function drho
 
       !//////////////////////////////////////
       !//////////////////////////////////////           stack
