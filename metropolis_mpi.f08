@@ -57,9 +57,9 @@
       call fopen("mc_dprof_16.txt",u16)
       call fopen("mc_dprof_32.txt",u32)
       delta = 1.0_pr/(pos%wx*pos%wy*256)
-      call hst8%init(rho-0.1_pr,rho+0.1_pr,delta)
-      call hst16%init(rho-0.1_pr,rho+0.1_pr,delta)
-      call hst32%init(rho-0.1_pr,rho+0.1_pr,delta)
+      call hst8%init( rho-0.03_pr,rho+0.03_pr,delta)
+      call hst16%init(rho-0.03_pr,rho+0.03_pr,delta)
+      call hst32%init(rho-0.03_pr,rho+0.03_pr,delta)
    end if
 
    ! scheduling
@@ -161,7 +161,9 @@
       if( pos%rank==0 ) then 
          call system_clock(e_time)
          step_time = real(10**9*dble(e_time-s_time)/(c_rate*cycle_reward*pos%nop))
-         open(newunit=n,file="mc_speed_notes.txt")
+         open(newunit=n,file="mc_notes.txt")
+            write(n,*) "timestamp", timestamp, "nxy", pos%nxy
+            write(n,*)
             write(n,*) "cost of step: ", pos%size*step_time, " / "
             write(n,*) "num of procs: ", pos%size
             write(n,*) "             =", step_time
