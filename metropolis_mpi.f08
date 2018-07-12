@@ -52,7 +52,6 @@
    call pos%bcast_from_master()    ! maybe redundant 
    call pos%unique_rnd()
    if( pos%rank==0 ) then
-      call sd%open(uscalars,uvectors)
       call fopen("mc_dprof_8.txt",u8)
       call fopen("mc_dprof_16.txt",u16)
       call fopen("mc_dprof_32.txt",u32)
@@ -60,6 +59,7 @@
       call hst8%init( rho-0.03_pr,rho+0.03_pr,delta)
       call hst16%init(rho-0.03_pr,rho+0.03_pr,delta)
       call hst32%init(rho-0.03_pr,rho+0.03_pr,delta)
+      call sd%open(uscalars,uvectors)
    end if
 
    ! scheduling
