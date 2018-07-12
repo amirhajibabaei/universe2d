@@ -30,6 +30,7 @@
                           rho, rc, rc2, ecut, dmax, rnd
    character(len=20)   :: arg
    type(hist1d)        :: hst4, hst8, hst16
+
    ! build system 
    call sd%make(pos%pp2d,timestamp)
 
@@ -58,7 +59,7 @@
 
    ! scheduling
    dump_every = 10**6
-   dump_total = 100
+   dump_total = 40
    call get_command_argument(1,arg)
    if( len_trim(arg)>0 ) read(arg,*) dump_total
    if( pos%rank==0 ) then
