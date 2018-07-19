@@ -96,6 +96,8 @@
          real(pr)             :: g(nstk)
          real(pr)             :: h(nstk)
       contains
+         procedure            :: xx => x_stack
+         procedure            :: yy => y_stack
          procedure            :: hexorder
          procedure            :: show => show_stack
       end type stack
@@ -1017,6 +1019,24 @@
       !//////////////////////////////////////
       !//////////////////////////////////////           stack
       !//////////////////////////////////////
+
+      pure &
+      function x_stack(env) result(x)
+      implicit none
+      class(stack), intent(in) :: env
+      real(pr)                 :: x(env%n)
+      x = env%x(1:env%n)
+      end function x_stack
+
+      pure &
+      function y_stack(env) result(y)
+      implicit none
+      class(stack), intent(in) :: env
+      real(pr)                 :: y(env%n)
+      y = env%x(1:env%n)
+      end function y_stack
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
       pure &
       function hexorder(env) result(psi)
