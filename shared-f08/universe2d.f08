@@ -72,6 +72,8 @@
          procedure            :: random   => random_pp2d   
          procedure            :: move     => move_pp2d
          procedure            :: zoom_on  => scube_pp2d 
+         procedure            :: zoom_u   => scube_up_pp2d 
+         procedure            :: zoom_r   => scube_right_pp2d 
          procedure            :: metro    => metropolis_pp2d
          procedure            :: dprof    => density_profile
          procedure            :: drho 
@@ -95,6 +97,7 @@
          real(pr)             :: h(nstk)
       contains
          procedure            :: hexorder
+         procedure            :: show => show_stack
       end type stack
 
    contains
@@ -722,6 +725,161 @@
       env%y(1:env%n) = env%y(1:env%n)-r(2)
       end subroutine scube_pp2d
 
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
+
+      subroutine scube_up_pp2d(pos,idx,env) 
+      implicit none
+      class(pp2d), intent(in), &
+                       target   :: pos
+      integer,       intent(in) :: idx
+      type(stack), intent(out)  :: env
+      integer                   :: i, cl, k
+      real(pr)                  :: r(2)
+      type(cube), pointer       :: ccub
+      cl = pos%cidx(idx)
+      k = pos%kidx(idx)
+      ccub => pos%cup(cl)
+      r = ccub%hld(k)%pos
+      env%n = 0
+      do i = 1, ccub%occ
+         if( i/=k .and. ccub%hld(i)%pos(2)>r(2) ) then
+                 env%n = env%n + 1
+                 env%id(env%n) = ccub%idx(i) 
+                 env%x(env%n) = ccub%hld(i)%pos(1)
+                 env%y(env%n) = ccub%hld(i)%pos(2)
+         end if
+      end do
+      ccub => ccub%sur1 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)<r(1) .and. &
+                     ccub%hld(i)%pos(2)>r(2) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,1)
+                   env%y(env%n) = ccub%hld(i)%pos(2) !+ su_ww(2,1)
+                end if
+             end do
+      ccub => ccub%sur2 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)<r(1) .and. &
+                     ccub%hld(i)%pos(2)<r(2) ) then
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,6)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,6)
+                end if
+             end do
+      ccub => ccub%sur3 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(2)<r(2) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) !+ su_ww(1,2)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,2)
+                end if
+             end do
+      ccub => ccub%sur3 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)>r(1) .and. &
+                     ccub%hld(i)%pos(2)<r(2) ) then
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,7)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,7)
+                end if
+             end do
+      ccub => ccub%sur4 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)>r(1) .and. &
+                     ccub%hld(i)%pos(2)>r(2) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,3)
+                   env%y(env%n) = ccub%hld(i)%pos(2) !+ su_ww(2,3)
+                end if
+             end do
+      env%x(1:env%n) = env%x(1:env%n)-r(1)
+      env%y(1:env%n) = env%y(1:env%n)-r(2)
+      end subroutine scube_up_pp2d
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
+
+      subroutine scube_right_pp2d(pos,idx,env) 
+      implicit none
+      class(pp2d), intent(in), &
+                       target   :: pos
+      integer,       intent(in) :: idx
+      type(stack), intent(out)  :: env
+      integer                   :: i, cl, k
+      real(pr)                  :: r(2)
+      type(cube), pointer       :: ccub
+      cl = pos%cidx(idx)
+      k = pos%kidx(idx)
+      ccub => pos%cup(cl)
+      r = ccub%hld(k)%pos
+      env%n = 0
+      do i = 1, ccub%occ
+         if(i/=k .and. ccub%hld(i)%pos(1)>r(1) ) then
+                 env%n = env%n + 1
+                 env%id(env%n) = ccub%idx(i) 
+                 env%x(env%n) = ccub%hld(i)%pos(1)
+                 env%y(env%n) = ccub%hld(i)%pos(2)
+         end if
+      end do
+      ccub => ccub%sur4 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(2)>r(2) .and. &
+                     ccub%hld(i)%pos(1)>r(1) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) !+ su_ww(1,4)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,4)
+                end if
+             end do
+      ccub => ccub%sur1 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)<r(1) .and. &
+                     ccub%hld(i)%pos(2)>r(2) ) then
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,5)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,5)
+                end if
+             end do
+
+      ccub => ccub%sur2 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)<r(1) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,1)
+                   env%y(env%n) = ccub%hld(i)%pos(2) !+ su_ww(2,1)
+                end if
+             end do
+      ccub => ccub%sur2 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)<r(1) .and. &
+                     ccub%hld(i)%pos(2)<r(2) ) then
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,6)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,6)
+                end if
+             end do
+      ccub => ccub%sur3 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(2)<r(2) .and. &
+                     ccub%hld(i)%pos(1)>r(1) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) !+ su_ww(1,2)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,2)
+                end if
+             end do
+      env%x(1:env%n) = env%x(1:env%n)-r(1)
+      env%y(1:env%n) = env%y(1:env%n)-r(2)
+      end subroutine scube_right_pp2d
+
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
       subroutine move_pp2d(pos,idx,dir,delta)  
@@ -887,5 +1045,15 @@
       end if
       end function hexorder
 
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      subroutine show_stack(env) 
+      implicit none
+      class(stack), intent(in) :: env
+      integer                  :: i
+      do i = 1, env%n
+         write(*,*) env%id(i), env%x(i), env%y(i)
+      end do
+      end subroutine show_stack
 
    end module universe 
