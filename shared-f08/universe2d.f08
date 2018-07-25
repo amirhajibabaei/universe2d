@@ -100,6 +100,7 @@
          procedure            :: yy => y_stack
          procedure            :: hexorder
          procedure            :: show => show_stack
+         procedure            :: rotate => rotate_stack
       end type stack
 
    contains
@@ -1064,6 +1065,28 @@
          psi = psi/6
       end if
       end function hexorder
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      subroutine rotate_stack(env,theta,matrix) 
+      implicit none
+      class(stack), intent(inout)    :: env
+      real(pr), intent(in), optional :: theta, matrix(2,2)
+      real(pr)                       :: mat(2,2), r(2)
+      integer                        :: i
+      if( present(matrix) ) then
+         mat = matrix
+      elseif( present(theta) ) then
+         mat = reshape( [cos(theta), sin(theta), -sin(theta), cos(theta)], [2,2] )
+      else
+         write(output_unit,*)"rotate stack"; stop
+      end if
+      do i = 1, env%n
+         r = matmul(mat,[env%x(i),env%y(i)])
+         env%x(i) = r(1)
+         env%y(i) = r(2)
+      end do
+      end subroutine rotate_stack
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
