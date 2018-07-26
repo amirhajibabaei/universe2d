@@ -11,7 +11,7 @@
 !
 !
    module histogram
-   use iso_fortran_env, only: real32, int64
+   use iso_fortran_env, only: real32, int64, real64
    implicit none
    private
    public  hist1d , hist2d
@@ -22,7 +22,7 @@
             real(pr)              :: x1, x2, dx
             integer               :: bins
             integer, allocatable  :: count(:)
-            integer               :: miss1, hit, miss2, total
+            integer(int64)        :: miss1, hit, miss2, total
          contains
             procedure             :: init, write, reset 
             procedure, private    :: gather_a, gather_s
@@ -34,7 +34,7 @@
             real(pr)              :: y1, y2, dy
             integer               :: xbins, ybins
             integer, allocatable  :: count(:,:)
-            integer               :: xmiss1, ymiss1, hit, &
+            integer(int64)        :: xmiss1, ymiss1, hit, &
                                      xmiss2, ymiss2, total
          contains
             procedure             :: init   => init_2d
@@ -121,7 +121,7 @@
       real(pr), intent(in), optional :: reals(:)
       integer                        :: i, uout
       character(len=20)              :: str1, str2, str3
-      real(pr)                       :: p
+      real(real64)                   :: p
       ! 
       select type (handle)
       type is (integer)
@@ -159,13 +159,13 @@
       str1 = "# x<"//trim(adjustl(str1))
       str2 = "# x>="//trim(adjustl(str2))
       str3 = "# else"  
-      write(uout,*) str1, h%miss1, real(h%miss1)/h%total
-      write(uout,*) str2, h%miss2, real(h%miss2)/h%total
-      write(uout,*) str3, h%hit, real(h%hit)/h%total
+      write(uout,*) str1, h%miss1, dble(h%miss1)/h%total
+      write(uout,*) str2, h%miss2, dble(h%miss2)/h%total
+      write(uout,*) str3, h%hit,   dble(h%hit)/h%total
       write(uout,*) "# ", h%bins + 1, h%x1, h%dx
       ! body
       do i = 0, h%bins
-         p = real(h%count(i))/h%total
+         p = dble(h%count(i))/h%total
          write(uout,*) h%x1 + i*h%dx, h%count(i), p, p/h%dx 
       end do
       !
@@ -261,7 +261,7 @@
       integer                        :: i, j, uout
       character(len=20)              :: str1, str2, str3, &
                                         str4, str5
-      real(pr)                       :: p
+      real(real64)                   :: p
       ! 
       select type (handle)
       type is (integer)
@@ -303,18 +303,18 @@
       str4 = "# y<"//trim(adjustl(str4))
       str5 = "# y>="//trim(adjustl(str5))
       str3 = "# else"  
-      write(uout,*) str1, h%xmiss1, real(h%xmiss1)/h%total
-      write(uout,*) str2, h%xmiss2, real(h%xmiss2)/h%total
+      write(uout,*) str1, h%xmiss1, dble(h%xmiss1)/h%total
+      write(uout,*) str2, h%xmiss2, dble(h%xmiss2)/h%total
       write(uout,*) "# x in range, but"
-      write(uout,*) str4, h%ymiss1, real(h%ymiss1)/h%total
-      write(uout,*) str5, h%ymiss2, real(h%ymiss2)/h%total
-      write(uout,*) str3, h%hit, real(h%hit)/h%total
+      write(uout,*) str4, h%ymiss1, dble(h%ymiss1)/h%total
+      write(uout,*) str5, h%ymiss2, dble(h%ymiss2)/h%total
+      write(uout,*) str3, h%hit,    dble(h%hit)/h%total
       write(uout,*) "# ", h%xbins + 1, h%x1, h%dx
       write(uout,*) "# ", h%ybins + 1, h%y1, h%dy
       ! body
       do j = 0, h%ybins
          do i = 0, h%xbins
-            p = real(h%count(i,j))/h%total
+            p = dble(h%count(i,j))/h%total
             write(uout,*) h%x1 + i*h%dx, h%y1 + j*h%dy, & 
                           h%count(i,j), p, p/(h%dx*h%dy)
          end do
