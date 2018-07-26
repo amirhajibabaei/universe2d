@@ -1,108 +1,142 @@
 !
 !   at rho=1.0 => P(delta) = exp(-delta/0.052)
 !
-!
+!   ~ 5 metro sweeps per sec
 !
 
 
     program ecmc
     use iso_fortran_env, only: int64
-    use universe, only: pp2d, stack, pr
-    use histogram, only: hist1d
+    use universe, only: pp2d, stack, pr, pi
+    use histogram, only: hist1d, hist2d
     implicit none
     type(pp2d)     :: pos
     type(stack)    :: env
-    type(hist1d)   :: h_delta
+    type(hist1d)   :: h_delta, h_xji, h_rji
+    type(hist2d)   :: h_gxy
     real(pr)       :: rnd, cutoff, skin, cut2, wth, rho, &
-                      powhi, delta, rj(2), max_del, sum_del, &
-                      dji, dji_ave, pressure
-    integer        :: idx, dir, nx, pow, powh, mloc(1), n, &
-                       ch, num_chains 
-    integer(int64) :: s_time, e_time, c_rate
-    character(len=*) , parameter :: address = "mc_restart.txt" !"../../repulsive/p_12/c_1.8/r_1.000/n_256/mc_restart.txt"
-    
-    rho = 1.0_pr
-    nx  = 64
+                      powhi, delta, rji(2), max_del, sum_del, &
+                      xji, dji, dji_ave, pressure, psi(2), &
+                      theta, mat(2,2)
+    integer        :: idx, dir, pow, powh, mloc(1), n, &
+                       ch, sweep, num_sweeps, uscalars, &
+                       uvecs, sample
+    integer(int64) :: timestamp
+!    character(len=*) , parameter :: address = "../../repulsive/p_64/c_1.8/r_0.882/n_256/mc_restart.txt"
+
+
     pow = 12; powh = pow/2; powhi = 1.0_pr/powh
     cutoff = 1.8_pr; cut2 = cutoff**2
     skin = 0.2_pr
     wth = cutoff + skin
-    !pos = pp2d([nx,nx],rho,wth,0.01)
-    pos = pp2d(address,wth)
-    call pos%stage()
-    call h_delta%init(0.0_pr,0.6_pr,0.004_pr)
+    call h_delta%init(0.0_pr,0.6_pr,0.005_pr)
+    call h_xji%init(0.0_pr,wth,0.01_pr)
+    call h_rji%init(0.6_pr,wth,0.01_pr)
+    call h_gxy%init(-wth,wth,0.05_pr,-wth,wth,0.05)
+    call fopen("ecmc_scalars.txt",uscalars) 
+    !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 
-    max_del = 0.2*nx/2
-
-
-    call system_clock(s_time,c_rate)
-    dji_ave = 0.0_pr
-    num_chains = 10000
-    do ch = 1, num_chains
+    open(newunit=uvecs,file="mc_vectors.txt",action="read")
+    do sample = 1, 40
     
-         ! select a random direction
-         call random_number(rnd)
-         if( rnd<0.5_pr ) then
-                 dir = 1
-         else
-                 dir = 2
-         end if
-         
-         ! select a random particle
-         call random_number(rnd)
-         idx = floor(rnd*pos%nop)
-
-         ! event chain    
-         sum_del = 0.0_pr
-         dji     = 0.0_pr
-         do
-
-             ! find the earliest collision of idx
-             if( dir==1 ) then
-                     call pos%zoom_r(idx,env)
-                     n = env%n
-                     call random_number(env%g(1:n))
-                     env%g(1:n) = -log(env%g(1:n))
-                     env%f(1:n) = collide(env%x(1:n),env%y(1:n),env%g(1:n))
-             else
-                     call pos%zoom_u(idx,env)
-                     n = env%n
-                     call random_number(env%g(1:n))
-                     env%g(1:n) = -log(env%g(1:n))
-                     env%f(1:n) = collide(env%y(1:n),env%x(1:n),env%g(1:n))
-             end if
-             mloc  = minloc(env%f(1:n))
-             delta = env%f(mloc(1));  call h_delta%gather(delta)
-             rj    = [ env%x(mloc(1)), env%y(mloc(1)) ]
-
-             ! move
-             sum_del = sum_del + delta
-             if( sum_del>max_del ) then
-                     delta = delta - (sum_del - max_del)
-                     call pos%move(idx,dir,delta)
-                     exit
-             else
-                     dji = dji + (rj(dir) - delta)
-                     call pos%move(idx,dir,delta)
-             end if
-
-             ! transfer idx 
-             idx   = env%id(mloc(1))
-
-         end do
-
-         dji_ave = dji_ave + dji
-
+        pos = pp2d(uvecs,wth); rho = pos%nop/(pos%lx*pos%ly)
+        call pos%stage()
+    
+        max_del = 0.05*sqrt(real(pos%nop))/2
+        num_sweeps = 10 
+        timestamp = 0
+        do sweep = 1, num_sweeps
+           !~~~~~~~~~~~ a sweep
+           dji_ave = 0.0_pr
+           do ch = 1, pos%nop
+                !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ an event chain
+                ! select a random direction
+                call random_number(rnd)
+                if( rnd<0.5_pr ) then
+                        dir = 1
+                else
+                        dir = 2
+                end if
+                ! select a random particle
+                call random_number(rnd)
+                idx = floor(rnd*pos%nop)
+                ! event chain    
+                sum_del = 0.0_pr
+                dji     = 0.0_pr
+                do
+                    timestamp = timestamp + 1
+                    ! find the earliest collision of idx
+                    if( dir==1 ) then
+                            call pos%zoom_r(idx,env)
+                            n = env%n
+                            call random_number(env%g(1:n))
+                            env%g(1:n) = -log(env%g(1:n))
+                            env%f(1:n) = collide(env%x(1:n),env%y(1:n),env%g(1:n))
+                    else
+                            call pos%zoom_u(idx,env)
+                            n = env%n
+                            call random_number(env%g(1:n))
+                            env%g(1:n) = -log(env%g(1:n))
+                            env%f(1:n) = collide(env%y(1:n),env%x(1:n),env%g(1:n))
+                    end if
+                    mloc  = minloc(env%f(1:n))
+                    delta = env%f(mloc(1))                    ; call h_delta%gather(delta)
+                    rji   = [ env%x(mloc(1)), env%y(mloc(1)) ]; call h_rji%gather(sqrt(sum(rji**2)))
+                    xji   = rji(dir) - delta                  ; call h_xji%gather(xji)
+                    ! move
+                    sum_del = sum_del + delta
+                    if( sum_del>=max_del ) then
+                            delta = delta - (sum_del - max_del)
+                            call pos%move(idx,dir,delta)
+                            exit
+                    else
+                            dji = dji + xji 
+                            call pos%move(idx,dir,delta)
+                    end if
+                    ! transfer idx 
+                    idx   = env%id(mloc(1))
+                end do!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ end of an event chain
+                dji_ave = dji_ave + dji
+           end do !~~~~~~~~~~~~~~~~~  end of a sweep
+           ! pressure
+           dji_ave = dji_ave/(pos%nop)
+           pressure = rho*(1.0_pr + dji_ave/max_del)
+           ! orientational order
+           psi = 0.0_pr
+           do idx = 0, pos%nop-1
+              call pos%zoom_on(idx,env)
+              psi = psi + env%hexorder()
+           end do
+           psi = psi/pos%nop
+           ! angle of orientation 
+           rnd = sum(psi**2)
+           theta = acos( psi(1)/sqrt(rnd) )
+           if( psi(2)<0.0_pr ) theta = 2*pi-theta
+           theta = theta/6
+           ! gxy
+           mat = reshape( [cos(-theta), sin(-theta), &
+                          -sin(-theta), cos(-theta)], [2,2] )
+           do idx = 0, pos%nop-1
+              call pos%zoom_on(idx,env)
+              call env%rotate(matrix=mat)
+              n = env%n
+              call h_gxy%gather(env%x(1:n),env%y(1:n))
+           end do
+           !
+           write(uscalars,*) sample, pressure, psi, theta
+           write(0,*) sample, pressure, psi, theta
+        end do
+    
     end do
-    call system_clock(e_time)
-    write(*,*) 10**9*dble(e_time-s_time)/(c_rate*10**6), sum_del/10**6
-    call h_delta%write("hst.txt")
-    
 
-    dji_ave = dji_ave/num_chains
-    pressure = rho*(1.0_pr + dji_ave/max_del)
-    write(*,*)"pressure = ", pressure
+    !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    close(uscalars)
+    call h_delta%write("hist_delta.txt")
+    call h_xji%write("hist_xji.txt")
+    call h_rji%write("hist_rji.txt")
+    call h_gxy%write("hist_gxy.txt")
+
 
     contains
             
@@ -136,6 +170,20 @@
             xxx = sqrt(v-y2)
             delta = delta + xx - xxx
             end function collide
-    
+   
+
+            subroutine fopen(fname,u)
+            implicit none
+            character(len=*), intent(in) :: fname
+            integer, intent(out)         :: u
+            logical                      :: yes
+            inquire(file=fname,exist=yes)
+            if( yes ) then
+               open(newunit=u,file=fname,status="old",action="write",access="append")
+            else
+               open(newunit=u,file=fname,status="new",action="write")
+            end if
+            end subroutine
+      
     end program
 

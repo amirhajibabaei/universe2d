@@ -1,5 +1,6 @@
 import numpy as np
 import pylab as pl
+import matplotlib.patches as patches
 # header
 fo = open('hist_gxy.txt')
 for k in range(11): fo.readline()
@@ -20,7 +21,9 @@ for kk in range(ny):
     y += [yraw]
     p += [praw]
 x,y,p = (np.array(v) for v in [x,y,p])
-print(list(v.shape for v in (x,y,p)))
-pl.axes().set_aspect('equal')
-pl.pcolor(x,y,p)
+# plot
+fig, ax = pl.subplots()
+ax.set_aspect('equal')
+patch = patches.Circle((0,0), radius=min(x.max(),y.max()), transform=ax.transData)
+ax.pcolor(x,y,p,clip_path=patch)
 pl.show()
