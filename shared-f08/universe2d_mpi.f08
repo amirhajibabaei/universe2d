@@ -27,6 +27,7 @@
          procedure            :: create_mapping
          procedure            :: do_mapping
          procedure            :: push 
+         procedure            :: update_master 
          procedure            :: update_all 
          procedure            :: bcast_from_master 
          procedure            :: metro_mpi => metropolis 
@@ -251,6 +252,17 @@
          call push_cl(pos,cl)
       end do
       end subroutine push
+
+      subroutine update_master(pos)
+      implicit none
+      class(pp2d_mpi), intent(inout) :: pos
+      integer                        :: cl, sender, reciever
+      reciever = 0
+      do cl = 0, pos%noc-1
+         sender = pos%owner(cl)
+         call sendrecv(pos,cl,sender,reciever)
+      end do
+      end subroutine update_master
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
