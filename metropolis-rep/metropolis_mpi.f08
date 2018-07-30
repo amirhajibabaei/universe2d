@@ -14,7 +14,7 @@
    use universe,          only: stack, pr
    use parallel_universe, only: pp2d_mpi, gridmap
    use seed_md,           only: seed
-   use histogram,         only: hist1d
+!   use histogram,         only: hist1d
    use iso_fortran_env,   only: int64
    implicit none
    type(pp2d_mpi)      :: pos
@@ -25,11 +25,10 @@
    integer             :: g(2), shift(2), idx, dir, n,  cycle_reward, &
                           step, steps, cyc, all_cycles, uscalars, uvectors, &
                           tdamp, dump_every, cyc_dump, dump_total, ntry, nsuccess, &
-                          u8, u16, u4, pow, powh
+                          pow, powh
    real(pr)            :: energy, virial, delta, step_time, de, psi(2), &
                           rho, rc, rc2, ecut, dmax, rnd
    character(len=20)   :: arg
-   type(hist1d)        :: hst4, hst8, hst16
 
    ! build system 
    call sd%make(pos%pp2d,timestamp)
@@ -48,13 +47,7 @@
    call pos%bcast_from_master()    ! maybe redundant 
    call pos%unique_rnd()
    if( pos%rank==0 ) then
-      call fopen("mc_dprof_4.txt",u4)
-      call fopen("mc_dprof_8.txt",u8)
-      call fopen("mc_dprof_16.txt",u16)
       call sd%open(uscalars,uvectors)
-      call hst4%init(rho-0.03_pr,rho+0.03_pr,pos%drho(4))
-      call hst8%init( rho-0.03_pr,rho+0.03_pr,pos%drho(8))
-      call hst16%init(rho-0.03_pr,rho+0.03_pr,pos%drho(16))
    end if
 
    ! scheduling
@@ -141,15 +134,9 @@
          virial = rho + 0.25_pr*virial/(pos%lx*pos%ly)
          psi = psi/pos%nop
          write(uscalars,*) timestamp, energy, virial, psi
-         call hst4%gather(pos%dprof(4))
-         call hst8%gather(pos%dprof(8))
-         call hst16%gather(pos%dprof(16))
          call sd%dump(pos,timestamp)
          if( mod(cyc,cyc_dump)==0 ) then
                  call pos%write(uvectors,string="new",ints=[timestamp])
-                 call hst4%write(u4,ints=[timestamp])  ; call hst4%reset() 
-                 call hst8%write(u8,ints=[timestamp])  ; call hst8%reset() 
-                 call hst16%write(u16,ints=[timestamp]); call hst16%reset() 
          end if
       end if
 
@@ -175,9 +162,6 @@
    if( pos%rank==0 ) then 
       close(uscalars)
       close(uvectors)
-      close(u4)
-      close(u8)
-      close(u16)
    end if
    call pos%end_parallel()
 
@@ -209,17 +193,17 @@
       end if
       end function
 
-      subroutine fopen(fname,u)
-      implicit none
-      character(len=*), intent(in) :: fname
-      integer, intent(out)         :: u
-      logical                      :: yes
-      inquire(file="mc_scalars.txt",exist=yes)
-      if( yes ) then
-         open(newunit=u,file=fname,status="old",action="write",access="append")
-      else
-         open(newunit=u,file=fname,status="new",action="write")
-      end if
-      end subroutine
+!      subroutine fopen(fname,u)
+!      implicit none
+!      character(len=*), intent(in) :: fname
+!      integer, intent(out)         :: u
+!      logical                      :: yes
+!      inquire(file="mc_scalars.txt",exist=yes)
+!      if( yes ) then
+!         open(newunit=u,file=fname,status="old",action="write",access="append")
+!      else
+!         open(newunit=u,file=fname,status="new",action="write")
+!      end if
+!      end subroutine
 
    end program
