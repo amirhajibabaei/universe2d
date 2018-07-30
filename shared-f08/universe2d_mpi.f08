@@ -26,6 +26,7 @@
          procedure            :: suggest_mapping
          procedure            :: create_mapping
          procedure            :: do_mapping
+         procedure            :: push 
          procedure            :: update_all 
          procedure            :: bcast_from_master 
          procedure            :: metro_mpi => metropolis 
@@ -66,6 +67,7 @@
       cc = floor(pos%nxy*rnd)
       call mpi_bcast( cc, 2, mpi_integer, pos%size-1, mpi_comm_world, ierr)
       end function randcc
+
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
       subroutine start_parallel(pos)
@@ -194,6 +196,61 @@
       pos%c_mine = pos%mod2( map%c1(:,pos%rank), c0 )
       pos%w_mine = map%cw(:,pos%rank)
       end subroutine do_mapping
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      subroutine sendrecv(pos,i,rk1,rk2)
+      implicit none
+      class(pp2d_mpi), intent(inout) :: pos 
+      integer,         intent(in)    :: i, rk1, rk2
+      integer                        :: occ, tag, ierr
+      if( rk1 == rk2 .or. rk1==-1 .or. rk2==-1 ) return
+      if( pos%rank == rk1 ) then
+         tag = i
+         occ = pos%cup(i)%occ
+         call mpi_send( occ,                            1, mpi_integer, rk2, tag, mpi_comm_world, ierr)
+         call mpi_send( pos%cup(i)%hld(1:occ)%name  , occ, mpi_integer, rk2, tag, mpi_comm_world, ierr)
+         call mpi_send( pos%cup(i)%hld(1:occ)%pos(1), occ, mpi_real,    rk2, tag, mpi_comm_world, ierr)
+         call mpi_send( pos%cup(i)%hld(1:occ)%pos(2), occ, mpi_real,    rk2, tag, mpi_comm_world, ierr)
+      elseif( pos%rank == rk2 ) then
+         call mpi_recv( occ,                            1, mpi_integer, rk1, tag, mpi_comm_world, mpi_status_ignore, ierr)
+         do
+            if( occ<=pos%cup(i)%cap ) exit
+            call pos%cup(i)%ext()
+         end do
+         call mpi_recv( pos%cup(i)%hld(1:occ)%name  , occ, mpi_integer, rk1, tag, mpi_comm_world, mpi_status_ignore, ierr)
+         call mpi_recv( pos%cup(i)%hld(1:occ)%pos(1), occ, mpi_real,    rk1, tag, mpi_comm_world, mpi_status_ignore, ierr)
+         call mpi_recv( pos%cup(i)%hld(1:occ)%pos(2), occ, mpi_real,    rk1, tag, mpi_comm_world, mpi_status_ignore, ierr)
+         pos%cup(i)%occ = occ
+      end if
+      end subroutine sendrecv
+
+      subroutine push_cl(pos, cl)
+      implicit none
+      class(pp2d_mpi), intent(inout) :: pos 
+      integer,         intent(in)    :: cl
+      integer                        :: ccl, sender, reciever, k
+      sender = pos%owner(cl)
+      if( sender==-1 ) return
+      do k = 1, 8
+         ccl = pos%cup(cl)%su(k)
+         reciever = pos%owner(ccl)
+         if( reciever==-1 .or. reciever == sender ) then
+                 cycle
+         else
+                 call sendrecv(pos,cl,sender,reciever)
+         end if
+      end do
+      end subroutine push_cl
+
+      subroutine push(pos)
+      implicit none
+      class(pp2d_mpi), intent(inout) :: pos
+      integer                        :: cl
+      do cl = 0, pos%noc-1
+         call push_cl(pos,cl)
+      end do
+      end subroutine push
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
