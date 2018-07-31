@@ -220,7 +220,7 @@
       pos%c_mine = pos%mod2( pos%map%c1(:,pos%rank), c0 )
       pos%w_mine = pos%map%cw(:,pos%rank)
       call pos%update_sides()
-      call pos%stage(pos%c_mine,pos%w_mine-1)
+      call pos%stage(pos%c_mine,pos%w_mine-1) ! if changed this, look at push_cl
       end subroutine shift_mapping
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -261,10 +261,13 @@
       integer,         intent(in)    :: cl
       integer                        :: ccl, k, sender, reciever
       logical                        :: upd(0:pos%size-1)
+      integer                        :: i, nn(3)
       upd = .false.
       sender = pos%owner(cl)
       upd(sender) = .true.
-      do k = 1, 8
+      nn = [1,2,6]
+      do i = 1, 3
+         k = nn(i)
          ccl = pos%cup(cl)%su(k)
          reciever = pos%owner(ccl)
          if( upd(reciever) .eqv. .false. ) then
