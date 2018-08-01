@@ -78,9 +78,9 @@
       end type pp2d
 
       integer, parameter      :: su_cubes(2,8) = &
-                                 reshape( [1,0,0,1,-1,0,0,-1, &
-                                          1,-1,1,1,-1,1,-1,-1], &
-                                          [2,8] )
+                                 reshape( [1,0,0,1,-1,0,0,-1, &    ! 7 2 6
+                                          1,-1,1,1,-1,1,-1,-1], &  ! 3 0 1
+                                          [2,8] )                  ! 8 4 5
       real(pr)                :: su_ww(2,8) 
 
       integer, parameter      :: nstk=1000
