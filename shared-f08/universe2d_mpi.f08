@@ -25,6 +25,7 @@
          procedure, public    :: shift_blocks
          procedure, public    :: stage_push
          procedure, public    :: push_blocks, push_borders
+         procedure, public    :: update_master
       end type pp2d_mpi
    
    contains
@@ -269,6 +270,21 @@
       end do
       call mpi_waitall(ns,requests(1:ns),mpi_statuses_ignore,ierr)
       end subroutine push_borders
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+
+      subroutine update_master(pos)
+      implicit none
+      class(pp2d_mpi), intent(inout) :: pos 
+      integer                        :: cl, ierr, ns
+      type(mpi_request)              :: requests(4*pos%n_mine)
+      call pos%stage_push()
+      ns = 0
+      do cl = 0, pos%noc-1
+         call pos%isend_irecv( cl, pos%old_owner(cl), 0 , ns, requests )
+      end do
+      call mpi_waitall(ns,requests(1:ns),mpi_statuses_ignore,ierr)
+      end subroutine update_master
 
    end module parallel_universe
 
