@@ -15,6 +15,7 @@
    use parallel_universe, only: pp2d_mpi
    use seed_md,           only: seed
    use iso_fortran_env,   only: int64
+   use mpi_f08
    implicit none
    type(pp2d_mpi)      :: pos
    type(stack)         :: env
@@ -23,9 +24,9 @@
    integer             :: shift(2), idx, dir, n,  cycle_reward, &
                           step, steps, cyc, all_cycles, uscalars, uvectors, &
                           tdamp, dump_every, cyc_dump, dump_total, ntry, nsuccess, &
-                          pow, powh
+                          pow, powh, ierr
    real(pr)            :: energy, virial, delta, step_time, de, psi(2), &
-                          rho, rc, rc2, ecut, dmax, rnd
+                          rho, rc, rc2, ecut, dmax, rnd, energy_t, virial_t, psi_t(2)
    character(len=20)   :: arg
 
    ! build system 
@@ -52,11 +53,12 @@
    dump_total = 40
    call get_command_argument(1,arg)
    if( len_trim(arg)>0 ) read(arg,*) dump_total
-   if( pos%rank==0 ) then
-      steps = (tdamp + 1 - pos%size)*pos%nop 
-   else
-      steps = (tdamp + 1 )*pos%nop 
-   end if
+   !if( pos%rank==0 ) then
+   !   steps = (tdamp + 1 - pos%size)*pos%nop 
+   !else
+   !   steps = (tdamp + 1 )*pos%nop 
+   !end if
+   steps        = tdamp*pos%nop
    cycle_reward = tdamp*pos%size
    cyc_dump     = max(dump_every/cycle_reward,1)
    all_cycles   = dump_total*cyc_dump
@@ -69,7 +71,10 @@
 
       ! main
       shift = pos%randcc() 
-      call pos%shift_mapping(shift)
+      call pos%shift_blocks(shift)
+      call pos%push_blocks()
+      call pos%push_borders()
+      call pos%stage( pos%c_mine, pos%w_mine-1 )
       do step = 1, steps
          call pos%random(-dmax,dmax,idx,dir,delta)
          call pos%zoom_on(idx,env)
@@ -92,7 +97,6 @@
       end do
 
       ! timestamp
-      call pos%update_master()
       timestamp = timestamp + cycle_reward
 
       ! tune dmax but keep it less than sd%dmax 
@@ -110,29 +114,42 @@
       end if
 
       ! calculate
-      if( pos%rank==0) then      
-         call pos%stage()
-         energy = 0.0_pr
-         virial = 0.0_pr
-         psi = 0.0_pr
-         do idx = 0, pos%nop-1
-            call pos%zoom_on(idx,env)
-            n = env%n
-            env%f(1:n) = efunc(env%x(1:n),env%y(1:n))
-            env%g(1:n) = vfunc(env%x(1:n),env%y(1:n))
-            energy = energy + sum(env%f(1:n))
-            virial = virial + sum(env%g(1:n))         
-            psi = psi + env%hexorder()
-         end do
-         energy = 0.5_pr*energy/(pos%lnop)
-         virial = rho + 0.25_pr*virial/(pos%lx*pos%ly)
-         psi = psi/pos%nop
-         write(uscalars,*) timestamp, energy, virial, psi
-         call sd%dump(pos,timestamp)
-         if( mod(cyc,cyc_dump)==0 ) then
-                 call pos%write(uvectors,string="new",ints=[timestamp])
-         end if
+      call pos%push_borders()
+      call pos%stage( pos%c_mine, pos%w_mine )
+      energy = 0.0_pr
+      virial = 0.0_pr
+      psi = 0.0_pr
+      do idx = 0, pos%lnop-1
+         call pos%zoom_on(idx,env)
+         n = env%n
+         env%f(1:n) = efunc(env%x(1:n),env%y(1:n))
+         env%g(1:n) = vfunc(env%x(1:n),env%y(1:n))
+         energy = energy + sum(env%f(1:n))
+         virial = virial + sum(env%g(1:n))         
+         psi = psi + env%hexorder()
+      end do
+      call mpi_reduce( energy, energy_t, 1, mpi_real, mpi_sum, 0, mpi_comm_world, ierr )
+      call mpi_reduce( virial, virial_t, 1, mpi_real, mpi_sum, 0, mpi_comm_world, ierr )
+      call mpi_reduce( psi, psi_t, 2, mpi_real, mpi_sum, 0, mpi_comm_world, ierr )
+      if (pos%rank==0 ) then
+         energy_t = 0.5_pr*energy_t/pos%nop
+         virial_t = rho + 0.25_pr*virial_t/(pos%lx*pos%ly)
+         psi_t = psi_t/pos%nop
+         write(uscalars,*) timestamp, energy_t, virial_t, psi_t
       end if
+      
+      ! restart file
+      if( mod(cyc,5)==0 ) then
+         call pos%update_master()
+         if( pos%rank==0 ) call sd%dump(pos,timestamp)
+      end if
+
+      ! dump
+      if( mod(cyc,cyc_dump)==0 ) then
+         call pos%update_master()
+         if(pos%rank==0)  call pos%write(uvectors,string="new",ints=[timestamp])
+      end if
+
 
       ! mc runtime notes
       if( pos%rank==0 ) then 
