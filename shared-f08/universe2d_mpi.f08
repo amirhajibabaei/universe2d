@@ -63,7 +63,7 @@
       integer                        :: cc(2), ierr
       real(pr)                       :: rnd(2)
       call random_number(rnd)
-      cc = floor(pos%nxy*rnd)
+      cc = floor(pos%map%cw(:,0)*rnd)
       call mpi_bcast( cc, 2, mpi_integer, pos%size-1, mpi_comm_world, ierr)
       end function randcc
 
