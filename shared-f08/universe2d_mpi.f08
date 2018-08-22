@@ -281,7 +281,7 @@
       call pos%stage_push()
       ns = 0
       do cl = 0, pos%noc-1
-         call pos%isend_irecv( cl, pos%old_owner(cl), 0 , ns, requests )
+         call pos%isend_irecv( cl, pos%owner(cl), 0 , ns, requests )
       end do
       call mpi_waitall(ns,requests(1:ns),mpi_statuses_ignore,ierr)
       end subroutine update_master
