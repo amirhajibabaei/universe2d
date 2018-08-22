@@ -277,7 +277,7 @@
       implicit none
       class(pp2d_mpi), intent(inout) :: pos 
       integer                        :: cl, ierr, ns
-      type(mpi_request)              :: requests(4*pos%n_mine)
+      type(mpi_request)              :: requests(2*pos%noc)
       call pos%stage_push()
       ns = 0
       do cl = 0, pos%noc-1
