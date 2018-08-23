@@ -74,6 +74,7 @@
          procedure            :: zoom_on  => scube_pp2d 
          procedure            :: zoom_u   => scube_up_pp2d 
          procedure            :: zoom_r   => scube_right_pp2d 
+         procedure            :: look_up 
          procedure            :: metro    => metropolis_pp2d
       end type pp2d
 
@@ -621,6 +622,121 @@
          call pos%random(dmin,dmax,idx,dir,delta)
       end if
       end subroutine random_pp2d
+
+      !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
+
+      subroutine look_up(pos,idx,xy,env) 
+      implicit none
+      class(pp2d), intent(in), target :: pos
+      integer,   intent(in), optional :: idx
+      real(pr),      intent(in)       :: xy(2)
+      type(stack), intent(out)        :: env
+      integer                         :: i, j, cl, cc(2)
+      real(pr)                        :: r(2)
+      type(cube), pointer             :: ccub
+      ! find r
+      if( present(idx) ) then
+         cl = pos%cidx(idx)
+         j = pos%kidx(idx)
+         r = pos%cup(cl)%llim + pos%cup(cl)%hld(j)%pos + xy
+      else
+         r = xy
+      end if
+      ! find cl of r
+      r = mod(r,pos%ll)
+      where( r<0.0_pr ) r = r+pos%ll
+      cc = floor(r/pos%ww)
+      cl = cc(2)*pos%nx + cc(1)
+      ! standardize r
+      ccub => pos%cup(cl)
+      r = r - ccub%llim
+      ! look around then
+      env%n = 0
+      do i = 1, ccub%occ
+          env%n = env%n + 1
+          env%id(env%n) = ccub%idx(i) 
+          env%x(env%n) = ccub%hld(i)%pos(1)
+          env%y(env%n) = ccub%hld(i)%pos(2)
+      end do
+      ccub => ccub%sur1 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)<r(1) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,1)
+                   env%y(env%n) = ccub%hld(i)%pos(2) !+ su_ww(2,1)
+                end if
+             end do
+      ccub => ccub%sur2 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)<r(1) .and. &
+                     ccub%hld(i)%pos(2)<r(2) ) then
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,6)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,6)
+                end if
+             end do
+      ccub => ccub%sur3 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(2)<r(2) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) !+ su_ww(1,2)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,2)
+                end if
+             end do
+      ccub => ccub%sur3 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)>r(1) .and. &
+                     ccub%hld(i)%pos(2)<r(2) ) then
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,7)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,7)
+                end if
+             end do
+      ccub => ccub%sur4 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)>r(1) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,3)
+                   env%y(env%n) = ccub%hld(i)%pos(2) !+ su_ww(2,3)
+                end if
+             end do
+      ccub => ccub%sur4 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)>r(1) .and. &
+                     ccub%hld(i)%pos(2)>r(2) ) then
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,8)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,8)
+                end if
+             end do
+      ccub => ccub%sur1 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(2)>r(2) ) then 
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) !+ su_ww(1,4)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,4)
+                end if
+             end do
+      ccub => ccub%sur1 
+             do i = 1, ccub%occ
+                if( ccub%hld(i)%pos(1)<r(1) .and. &
+                     ccub%hld(i)%pos(2)>r(2) ) then
+                   env%n = env%n + 1
+                   env%id(env%n) = ccub%idx(i) 
+                   env%x(env%n) = ccub%hld(i)%pos(1) + su_ww(1,5)
+                   env%y(env%n) = ccub%hld(i)%pos(2) + su_ww(2,5)
+                end if
+             end do
+      env%x(1:env%n) = env%x(1:env%n)-r(1)
+      env%y(1:env%n) = env%y(1:env%n)-r(2)
+      end subroutine look_up
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
 
