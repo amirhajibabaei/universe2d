@@ -70,6 +70,7 @@
          procedure            :: stage    => active_pp2d   
          procedure            :: original => original_pp2d 
          procedure            :: random   => random_pp2d   
+         procedure            :: randcup 
          procedure            :: move     => move_pp2d
          procedure            :: zoom_on  => scube_pp2d 
          procedure            :: zoom_u   => scube_up_pp2d 
@@ -622,6 +623,16 @@
          call pos%random(dmin,dmax,idx,dir,delta)
       end if
       end subroutine random_pp2d
+
+
+      function randcup(pos) result(cc)
+      implicit none
+      class(pp2d), intent(in) :: pos
+      integer                 :: cc(2)
+      real(pr)                :: rnd(2)
+      call random_number(rnd)
+      cc = floor(rnd*pos%nxy)
+      end function randcup
 
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     
 
