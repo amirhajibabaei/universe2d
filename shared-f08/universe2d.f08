@@ -3,7 +3,7 @@
    use iso_fortran_env, only: real32, int64, output_unit
    implicit none
    private
-   public      pr,  pp2d, stack, particle, pi
+   public      pr,  pp2d, stack, particle, pi, latt_const
   
       integer, parameter      :: pr = real32 
 
@@ -1047,5 +1047,16 @@
          write(*,*) env%id(i), env%x(i), env%y(i)
       end do
       end subroutine show_stack
+
+      !//////////////////////////////////////
+      !//////////////////////////////////////           other
+      !//////////////////////////////////////
+
+      function latt_const(rho) result(a)
+      implicit none
+      real(pr),   intent(in)  :: rho
+      real(pr)                :: a
+      a = sqrt(2.0_pr/(rho*sqrt(3.0_pr)))
+      end function latt_const
 
    end module universe 
