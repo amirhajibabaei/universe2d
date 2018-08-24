@@ -39,13 +39,11 @@
            call h_rho%gather( real(pos%lnop) )
         end do
 
-        write(*,*) sample, nums, root 
-
     end do
     close(uvecs)
 
-    call h_rho%write(root//"hist_rho.txt", string=" cw, ww (block = cw*ww):", &
-                                     ints=cw, & 
+    call h_rho%write(root//"hist_rho.txt", string=" cw(2), n, ww(2) (block = cw*ww):", &
+                                     ints=[cw(1),cw(2),nums], & 
                                      reals=pos%ww, & 
                                      rescale_x_by_fac=1.0/area)
 
