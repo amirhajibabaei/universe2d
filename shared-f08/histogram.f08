@@ -111,7 +111,7 @@
   
       !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       
-      subroutine write(h,handle,string,ints,reals) 
+      subroutine write(h,handle,string,ints,reals,rescale_x_by_fac) 
       implicit none
       class(hist1d), intent(in)      :: h
       class(*),     intent(in)       :: handle
@@ -119,9 +119,10 @@
                          optional    :: string
       class(*), intent(in), optional :: ints(:)
       real(pr), intent(in), optional :: reals(:)
+      real(pr), intent(in), optional :: rescale_x_by_fac
       integer                        :: i, uout
-      character(len=20)              :: str1, str2, str3
-      real(real64)                   :: p
+      character(len=30)              :: str1, str2, str3
+      real(real64)                   :: p, xf
       ! 
       select type (handle)
       type is (integer)
@@ -153,20 +154,23 @@
       else
          write(uout,*) "# "
       end if
+      ! xfactor
+      xf = 1.0_pr
+      if( present(rescale_x_by_fac) ) xf = rescale_x_by_fac
       ! abstract: 3 lines
-      write(str1,*)h%x1  
-      write(str2,*)h%x1 + (h%bins+1)*h%dx 
+      write(str1,*) ( h%x1 )*xf
+      write(str2,*) ( h%x1 + (h%bins+1)*h%dx )*xf
       str1 = "# x<"//trim(adjustl(str1))
       str2 = "# x>="//trim(adjustl(str2))
       str3 = "# else"  
       write(uout,*) str1, h%miss1, dble(h%miss1)/h%total
       write(uout,*) str2, h%miss2, dble(h%miss2)/h%total
       write(uout,*) str3, h%hit,   dble(h%hit)/h%total
-      write(uout,*) "# ", h%bins + 1, h%x1, h%dx
+      write(uout,*) "# ", h%bins + 1, h%x1*xf, h%dx*xf
       ! body
       do i = 0, h%bins
          p = dble(h%count(i))/h%total
-         write(uout,*) h%x1 + i*h%dx, h%count(i), p, p/h%dx 
+         write(uout,*) ( h%x1 + i*h%dx )*xf, h%count(i), p, p/h%dx 
       end do
       !
       select type (handle)
