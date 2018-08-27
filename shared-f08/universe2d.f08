@@ -284,6 +284,10 @@
       p%pos = mod(p%pos,pos%ll)
       where( p%pos<0.0_pr ) p%pos = p%pos+pos%ll
       cc = floor(p%pos/pos%ww)
+      ! *** bug *** when r = l-eps; floor(r/w)=floor(l/w)=nxy exceeds dims
+      ! fixed by this line: 
+      where( cc>=pos%nxy ) cc=pos%nxy-1
+      ! end bug 
       cl = cc(2)*pos%nx + cc(1)
       if( pos%stat==0 ) then
          call pos%cup(cl)%add(idx,p)
