@@ -9,7 +9,7 @@
     real(pr), parameter :: wth = 5.0_pr
     type(pp2d)         :: pos
     type(hist1d)       :: h_rho
-    integer            :: sample, k, nx, uvecs, nums
+    integer            :: sample, k, nx, uvecs, nums, skip(0:100), nskip
     real(pr)           :: rho, ll(2), area
     character(len=:),     &
          allocatable   :: root
@@ -29,10 +29,12 @@
 
     nums = num_samples()
     open(newunit=uvecs,file=root//"mc_vectors.txt",status="old",action="read")
-    do sample = 1, nums 
+    do sample = 1, nums
+
+        call skip_lines( uvecs, skip(sample-1) )
     
         pos = pp2d(uvecs,wth)
-        if( sample<10 ) cycle
+        if( sample<8 ) cycle
 
         do k = 1, 1000
            call pos%stage( pos%randcup() , cw )
@@ -47,14 +49,19 @@
                                      reals=pos%ww, & 
                                      rescale_x_by_fac=1.0/area)
 
+    write(*,*) root
+    write(*,*) "n samples:", nums
+    write(*,*) "n skip:   ", nskip
 
     contains
 
+
         function num_samples() result(k)
         implicit none
-        integer :: i, j, k, num
+        integer :: i, j, k, num, line
         real    :: x, y
         open( 1, file=root//'mc_vectors.txt' )
+        skip = 0; nskip = 0
         k = 0
         do
            read(1,*,end=173)
@@ -62,14 +69,30 @@
            read(1,*,end=173)
            read(1,*,end=173) num
            read(1,*,end=173) x, y
+           line = 5
            do i = 1, num
-              read(1,*,end=173) j, x, y
+              line = line + 1
+              read(1,*,end=173,err=172) j, x, y
            end do 
            k = k+1
+           cycle
+           172 continue
+           nskip = nskip + 1
+           skip(k) = line - 1
+           backspace(1)
         end do 
         173 continue
         close( 1 )
         end function
+
+
+        subroutine skip_lines(u,numl)
+        integer u, numl, i
+        do i = 1, numl
+           read(u,*)
+        end do
+        end subroutine
+
 
         subroutine read_param(rho,nx)
         implicit none
