@@ -37,14 +37,14 @@
     !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 
-    open(newunit=uvecs,file="mc_vectors.txt",action="read")
+    open(newunit=uvecs,file="mc_vectors.txt",status="old",action="read")
     do sample = 1, 40
     
         pos = pp2d(uvecs,wth); rho = pos%nop/(pos%lx*pos%ly)
         call pos%stage()
     
         max_del = 0.05*sqrt(real(pos%nop))/2
-        num_sweeps = 10 
+        num_sweeps = 100 
         timestamp = 0
         do sweep = 1, num_sweeps
            !~~~~~~~~~~~ a sweep
