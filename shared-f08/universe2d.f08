@@ -661,6 +661,7 @@
       r = mod(r,pos%ll)
       where( r<0.0_pr ) r = r+pos%ll
       cc = floor(r/pos%ww)
+      where( cc>=pos%nxy ) cc=pos%nxy-1
       cl = cc(2)*pos%nx + cc(1)
       ! standardize r
       ccub => pos%cup(cl)
