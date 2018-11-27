@@ -79,7 +79,7 @@
            cycle
            172 continue
            nskip = nskip + 1
-           skip(k) = line - 1
+           skip(k) = skip(k) + line - 1 ! multiple failures in a row taken care of
            backspace(1)
         end do 
         173 continue
