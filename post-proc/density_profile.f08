@@ -5,11 +5,11 @@
     use universe, only: pp2d, pr
     use histogram, only: hist1d
     implicit none
-    integer, parameter  :: cw(2) = [1,1]*20
+    integer, parameter  :: cw(2) = [1,1]*20, max_num_samples=1000
     real(pr), parameter :: wth = 5.0_pr
     type(pp2d)         :: pos
     type(hist1d)       :: h_rho
-    integer            :: sample, k, nx, uvecs, nums, skip(0:100), nskip
+    integer            :: sample, k, nx, uvecs, nums, skip(0:max_num_samples), nskip
     real(pr)           :: rho, ll(2), area
     character(len=:),     &
          allocatable   :: root
@@ -28,6 +28,7 @@
     call h_rho%init( real(floor(0.9*pos%lnop)), real(floor(1.1*pos%lnop)), 1.0 )
 
     nums = num_samples()
+    if( nums>max_num_samples ) print *, "warning! num_samples > max_num_samples"
     open(newunit=uvecs,file=root//"mc_vectors.txt",status="old",action="read")
     do sample = 1, nums
 
